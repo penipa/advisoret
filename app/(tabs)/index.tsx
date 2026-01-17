@@ -1,4 +1,5 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
+﻿// <SECTION:IMPORTS>
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -20,9 +21,13 @@ import { BrandLockup } from "../../src/ui/BrandLockup";
 import { TCard, TSkeletonBox, TSkeletonLine } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
+// </SECTION:IMPORTS>
 
+// <SECTION:ASSETS>
 const BRAND_A = require("../../assets/branding/logo-a.png");
+// </SECTION:ASSETS>
 
+// <SECTION:TYPES>
 type MonthRow = {
   venue_id: string;
   name: string;
@@ -37,7 +42,6 @@ type MonthRow = {
   ratings_count: number;
 };
 
-
 type AllTimeRow = {
   venue_id: string;
   name: string;
@@ -50,7 +54,6 @@ type AllTimeRow = {
   // (solo para ordenar internamente)
   bayes_score?: number;
 };
-
 
 type ExploreVenue = {
   id: string;
@@ -71,7 +74,6 @@ type NewVenue = {
   ratings_count?: number | null;
 };
 
-
 type NearVenue = {
   id: string;
   name: string;
@@ -86,10 +88,11 @@ type NearVenue = {
   ratings_count?: number | null;
 };
 
-
 type ChipKey = "all" | "city" | "following" | "mine";
 type AwardFilter = "all" | "awarded" | "no_award";
+// </SECTION:TYPES>
 
+// <SECTION:HELPERS_TEXT_FORMAT>
 function reviewsLabel(n: number) {
   if (!n || n <= 0) return "Sin reseñas";
   if (n === 1) return "1 reseña";
@@ -102,7 +105,9 @@ function fmtKm(km: number) {
   if (km < 10) return km.toFixed(1) + " km";
   return String(Math.round(km)) + " km";
 }
+// </SECTION:HELPERS_TEXT_FORMAT>
 
+// <SECTION:HELPERS_TIME>
 // Mes natural en UTC (alineado con tu lógica mensual)
 function monthRangeISO() {
   const now = new Date();
@@ -110,7 +115,9 @@ function monthRangeISO() {
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0));
   return { startISO: start.toISOString(), endISO: end.toISOString() };
 }
+// </SECTION:HELPERS_TIME>
 
+// <SECTION:UI_COMPONENTS>
 function Chip({
   label,
   active,
@@ -230,7 +237,14 @@ function SkeletonWideCard() {
     <TCard style={{ width: 280, marginRight: theme.spacing.sm, padding: 0, overflow: "hidden" }}>
       <TSkeletonBox height={140} radius={0} style={{ borderWidth: 0 }} />
       <View style={{ padding: theme.spacing.md }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: 36 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            minHeight: 36,
+          }}
+        >
           <TSkeletonLine width="65%" height={16} />
           <TSkeletonBox width={36} height={36} radius={999} style={{ borderWidth: 0 }} />
         </View>
@@ -298,7 +312,7 @@ function VenueThumb({
         <Image source={{ uri: url }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
         <View style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
-          <TText weight="900" size={16} style={{ letterSpacing: 0.5 }}>
+          <TText weight="800" size={16} style={{ letterSpacing: 0.5 }}>
             {initials}
           </TText>
         </View>
@@ -370,7 +384,7 @@ function NewVenueCard({
                   backgroundColor: theme.colors.surface2,
                 }}
               >
-                <TText size={12} weight="900" style={{ color: theme.colors.text }}>
+                <TText size={12} weight="800" style={{ color: theme.colors.text }}>
                   NUEVO
                 </TText>
               </View>
@@ -463,7 +477,7 @@ function NearVenueCard({
                   backgroundColor: theme.colors.surface2,
                 }}
               >
-                <TText size={12} weight="900" style={{ color: theme.colors.text }}>
+                <TText size={12} weight="800" style={{ color: theme.colors.text }}>
                   NUEVO
                 </TText>
               </View>
@@ -492,7 +506,9 @@ function NearVenueCard({
     </Pressable>
   );
 }
+// </SECTION:UI_COMPONENTS>
 
+// <SECTION:HELPERS_GEO>
 // Haversine (distancia en km)
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
@@ -509,18 +525,25 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
+// </SECTION:HELPERS_GEO>
 
+// <SECTION:SCREEN>
 export default function HomeScreen() {
+  // <SECTION:SCREEN_INIT>
   const router = useRouter();
 
   // Home es escaparate: la búsqueda vive en la pestaña "Explorar"
   const SHOW_HOME_EXPLORE_ENTRY = false;
+  // </SECTION:SCREEN_INIT>
 
+  // <SECTION:STATE_RANKINGS>
   const [monthRows, setMonthRows] = useState<MonthRow[]>([]);
   const [allRows, setAllRows] = useState<AllTimeRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [rankLoading, setRankLoading] = useState(false);
+  // </SECTION:STATE_RANKINGS>
 
+  // <SECTION:STATE_EXPLORE>
   // Explorar
   const [q, setQ] = useState("");
   const [chip, setChip] = useState<ChipKey>("all");
@@ -531,7 +554,9 @@ export default function HomeScreen() {
   const [exploreRows, setExploreRows] = useState<ExploreVenue[]>([]);
   const [exploreLoading, setExploreLoading] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
+  // </SECTION:STATE_EXPLORE>
 
+  // <SECTION:STATE_PREMIUM_CONTENT>
   // Premium default content
   const [newRows, setNewRows] = useState<NewVenue[]>([]);
   const [newLoading, setNewLoading] = useState(false);
@@ -539,10 +564,14 @@ export default function HomeScreen() {
   const [nearRows, setNearRows] = useState<NearVenue[]>([]);
   const [nearLoading, setNearLoading] = useState(false);
   const [locDenied, setLocDenied] = useState(false);
+  // </SECTION:STATE_PREMIUM_CONTENT>
 
+  // <SECTION:STATE_UI_MISC>
   // bust para imágenes (anti-cache)
   const [coverBust, setCoverBust] = useState<number>(0);
+  // </SECTION:STATE_UI_MISC>
 
+  // <SECTION:NAV_HELPERS>
   const goVenue = (venueId: string) => {
     router.push({ pathname: "/venue/[id]", params: { id: venueId } });
   };
@@ -559,8 +588,10 @@ export default function HomeScreen() {
     Keyboard.dismiss();
     router.push({ pathname: "/explore", params });
   }, [router, q, selectedCity, awardFilter]);
+  // </SECTION:NAV_HELPERS>
 
-    const loadAllTime = async () => {
+  // <SECTION:LOADERS_RANKINGS>
+  const loadAllTime = async () => {
     // Ordenamos con bayes_score (estable con pocas reseñas),
     // pero mostramos avg_score (media real) para evitar incongruencias tipo “tengo 1 reseña y sale otro número”.
     const all = await supabase
@@ -573,7 +604,7 @@ export default function HomeScreen() {
     setAllRows((all.data ?? []) as unknown as AllTimeRow[]);
   };
 
-    async function loadMonthNatural() {
+  async function loadMonthNatural() {
     const { startISO, endISO } = monthRangeISO();
 
     // 1) Ratings del mes (solo para ordenar el “top del mes”)
@@ -674,7 +705,9 @@ export default function HomeScreen() {
       setRankLoading(false);
     }
   };
+  // </SECTION:LOADERS_RANKINGS>
 
+  // <SECTION:LOADERS_NEW>
   const loadNew = async () => {
     setNewLoading(true);
     try {
@@ -724,7 +757,9 @@ export default function HomeScreen() {
       setNewLoading(false);
     }
   };
+  // </SECTION:LOADERS_NEW>
 
+  // <SECTION:LOADERS_NEAR>
   const requestAndLoadNear = async () => {
     setNearLoading(true);
     setLocDenied(false);
@@ -809,7 +844,9 @@ export default function HomeScreen() {
       setNearLoading(false);
     }
   };
+  // </SECTION:LOADERS_NEAR>
 
+  // <SECTION:EXPLORE_LOGIC>
   const matchesQuery = useCallback((v: ExploreVenue, query: string) => {
     const qn = query.trim().toLowerCase();
     if (!qn) return true;
@@ -916,7 +953,7 @@ export default function HomeScreen() {
       const ordered = venueIds.map((id) => map.get(id)).filter(Boolean) as ExploreVenue[];
 
       let filtered = ordered;
-      if (selectedCity && chip === "city") filtered = filtered.filter((x) => x.city === selectedCity);
+      if (selectedCity) filtered = filtered.filter((x) => x.city === selectedCity);
       if (query) filtered = filtered.filter((x) => matchesQuery(x, query));
 
       setExploreRows(filtered);
@@ -936,7 +973,9 @@ export default function HomeScreen() {
   const chipLabelCity = useMemo(() => {
     return selectedCity ? "📍 " + selectedCity : "📍 Localidad";
   }, [selectedCity]);
+  // </SECTION:EXPLORE_LOGIC>
 
+  // <SECTION:FOCUS_EFFECT>
   useFocusEffect(
     useCallback(() => {
       setCoverBust(Date.now());
@@ -950,11 +989,18 @@ export default function HomeScreen() {
       }
     }, [loadExplore, shouldShowExplore])
   );
+  // </SECTION:FOCUS_EFFECT>
 
+  // <SECTION:RENDER>
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
-        <BrandLockup title="Advisoret" subtitle="Esmorzarets" iconSource={BRAND_A} style={{ marginBottom: theme.spacing.lg + 6 }} />
+        <BrandLockup
+          title="Advisoret"
+          subtitle="Esmorzarets"
+          iconSource={BRAND_A}
+          style={{ marginBottom: theme.spacing.lg + 6 }}
+        />
 
         {error && (
           <TText style={{ color: theme.colors.danger, marginBottom: theme.spacing.md }}>
@@ -986,7 +1032,14 @@ export default function HomeScreen() {
             <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
               <RankCard
                 title={r.name}
-                subtitle={(r.city ?? "") + " · Mes " + Number(r.score_month ?? 0).toFixed(1) + " (" + Number(r.ratings_count_month ?? 0) + ")"}
+                subtitle={
+                  (r.city ?? "") +
+                  " · Mes " +
+                  Number(r.score_month ?? 0).toFixed(1) +
+                  " (" +
+                  Number(r.ratings_count_month ?? 0) +
+                  ")"
+                }
                 score={Number(r.avg_score ?? 0)}
                 n={Number(r.ratings_count ?? 0)}
                 badge="MES"
@@ -1193,4 +1246,6 @@ export default function HomeScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+  // </SECTION:RENDER>
 }
+// </SECTION:SCREEN>
