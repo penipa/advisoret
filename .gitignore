@@ -7,3 +7,11 @@
 # Mac/Windows junk
 .DS_Store
 Thumbs.db
+# Expo / Node
+node_modules/
+.expo/
+.env
+.env.*
+dist/
+build/
+
