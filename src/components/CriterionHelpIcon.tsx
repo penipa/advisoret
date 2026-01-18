@@ -5,16 +5,30 @@ import { theme } from "../theme";
 import { TText } from "../ui/TText";
 import { CriterionLike, getCriterionHelp } from "../content/criteriaHelp";
 
+type CriterionWithHelp = CriterionLike & {
+  help_es?: string | null;
+  help_en?: string | null;
+};
+
 export function CriterionHelpIcon({
   productTypeId,
   criterion,
 }: {
   productTypeId: string;
-  criterion: CriterionLike;
+  criterion: CriterionWithHelp;
 }) {
   const [open, setOpen] = useState(false);
 
-  const help = useMemo(() => getCriterionHelp(productTypeId, criterion), [productTypeId, criterion]);
+  const help = useMemo(() => {
+    const title = (criterion.name_es || criterion.name_en || "").trim();
+
+    // ✅ Prioridad: texto desde Supabase (editable sin redeploy)
+    const body = (criterion.help_es || criterion.help_en || "").trim();
+    if (title && body) return { title, body };
+
+    // Fallback: tooltips hardcoded (por si help_es no está poblado)
+    return getCriterionHelp(productTypeId, criterion);
+  }, [productTypeId, criterion]);
 
   if (!help) return null;
 

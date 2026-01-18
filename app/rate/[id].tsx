@@ -1,3 +1,4 @@
+// <SECTION:IMPORTS>
 import { useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView,
@@ -16,7 +17,9 @@ import { TCard } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
 import { CriterionHelpIcon } from "../../src/components/CriterionHelpIcon";
+// </SECTION:IMPORTS>
 
+// <SECTION:TYPES>
 type Venue = {
   id: string;
   name: string;
@@ -30,10 +33,28 @@ type Criterion = {
   name_es: string;
   name_en: string;
   sort_order: number;
-};
 
+  // ✅ NUEVO: tooltips editables en Supabase
+  help_es?: string | null;
+  help_en?: string | null;
+};
+// </SECTION:TYPES>
+
+// <SECTION:HELPERS>
 const clampScore = (n: number) => Math.max(1, Math.min(5, Math.round(n)));
 
+// ✅ mes calculado en UTC (alineado con month_bucket en BD)
+function monthRangeISO() {
+  const now = new Date();
+
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+
+  return { startISO: start.toISOString(), endISO: end.toISOString() };
+}
+// </SECTION:HELPERS>
+
+// <SECTION:UI_STEPPER>
 function Stepper({
   value,
   onChange,
@@ -67,29 +88,20 @@ function Stepper({
     </View>
   );
 }
+// </SECTION:UI_STEPPER>
 
-// ✅ mes calculado en UTC (alineado con month_bucket en BD)
-function monthRangeISO() {
-  const now = new Date();
-
-  const start = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0)
-  );
-  const end = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0)
-  );
-
-  return { startISO: start.toISOString(), endISO: end.toISOString() };
-}
-
+// <SECTION:SCREEN>
 export default function RateScreen() {
+  // <SECTION:SCREEN_INIT>
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   // product_types.id para "esmorzaret"
   const ESMORZARET_PRODUCT_TYPE_ID = "5b0af5a5-e73a-4381-9796-c6676c285206";
+  // </SECTION:SCREEN_INIT>
 
+  // <SECTION:STATE_CORE>
   const [venue, setVenue] = useState<Venue | null>(null);
 
   // ✅ score del local (igual que Home/Detalle)
@@ -120,7 +132,9 @@ export default function RateScreen() {
   const isBusy = saving || editLoading;
 
   const label = (c: Criterion) => c.name_es || c.name_en;
+  // </SECTION:STATE_CORE>
 
+  // <SECTION:EFFECT_LOAD_VENUE_AND_CRITERIA>
   useEffect(() => {
     if (!id) return;
 
@@ -156,7 +170,8 @@ export default function RateScreen() {
 
         const c = await supabase
           .from("rating_criteria")
-          .select("id,code,name_es,name_en,sort_order")
+          // ✅ NUEVO: traemos help_es/help_en desde Supabase
+          .select("id,code,name_es,name_en,help_es,help_en,sort_order")
           .eq("product_type_id", ESMORZARET_PRODUCT_TYPE_ID)
           .eq("is_active", true)
           .order("sort_order", { ascending: true });
@@ -187,14 +202,18 @@ export default function RateScreen() {
       }
     })();
   }, [id]);
+  // </SECTION:EFFECT_LOAD_VENUE_AND_CRITERIA>
 
+  // <SECTION:DERIVED_PRICE>
   const parsedPrice = useMemo(() => {
     const t = price.trim().replace(",", ".");
     if (!t) return null;
     const n = Number(t);
     return Number.isFinite(n) ? n : NaN;
   }, [price]);
+  // </SECTION:DERIVED_PRICE>
 
+  // <SECTION:HELPERS_EXISTING_RATING>
   const getThisMonthRatingId = async (userId: string) => {
     if (!id) return null;
     const { startISO, endISO } = monthRangeISO();
@@ -222,7 +241,9 @@ export default function RateScreen() {
       score: clampScore(scores[c.id] ?? 4),
     }));
   };
+  // </SECTION:HELPERS_EXISTING_RATING>
 
+  // <SECTION:LOAD_RATING_FOR_EDIT>
   const loadRatingForEditById = async (ratingId: string, msg?: string) => {
     setEditLoading(true);
     setSaveErr(null);
@@ -278,7 +299,9 @@ export default function RateScreen() {
       setEditLoading(false);
     }
   };
+  // </SECTION:LOAD_RATING_FOR_EDIT>
 
+  // <SECTION:EFFECT_PREFILL_THIS_MONTH>
   // ✅ Auto-cargar tu valoración del mes al entrar (evita el “doble guardado”)
   useEffect(() => {
     if (!id) return;
@@ -304,7 +327,9 @@ export default function RateScreen() {
       }
     })();
   }, [id, criteria.length, prefillChecked, editRatingId]);
+  // </SECTION:EFFECT_PREFILL_THIS_MONTH>
 
+  // <SECTION:DB_MUTATIONS>
   const doInsertNew = async (userId: string) => {
     if (!id) return { error: { code: "NO_ID", message: "Missing id" }, ratingId: null };
 
@@ -463,7 +488,9 @@ export default function RateScreen() {
       setSaving(false);
     }
   };
+  // </SECTION:DB_MUTATIONS>
 
+  // <SECTION:RENDER>
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <KeyboardAvoidingView
@@ -666,4 +693,6 @@ export default function RateScreen() {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+  // </SECTION:RENDER>
 }
+// </SECTION:SCREEN>
