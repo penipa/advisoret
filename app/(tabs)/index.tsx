@@ -995,12 +995,23 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
+        {/* <SECTION:HOME_HEADER> */}
         <BrandLockup
           title="Advisoret"
           subtitle="Esmorzarets"
           iconSource={BRAND_A}
-          style={{ marginBottom: theme.spacing.lg + 6 }}
+          style={{ marginBottom: theme.spacing.md }}
         />
+
+        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: theme.spacing.lg + 6 }}>
+          <TButton
+            title="+ Proponer local"
+            variant="ghost"
+            style={{ paddingHorizontal: 12, paddingVertical: 8, alignSelf: "flex-start" }}
+            onPress={() => router.push("/venue/suggest")}
+          />
+        </View>
+        {/* </SECTION:HOME_HEADER> */}
 
         {error && (
           <TText style={{ color: theme.colors.danger, marginBottom: theme.spacing.md }}>
