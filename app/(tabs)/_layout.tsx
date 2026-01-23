@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Tabs } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
 import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "../../components/haptic-tab";
 import { IconSymbol } from "../../components/ui/icon-symbol";
@@ -36,6 +37,9 @@ function shortLabel(s: string) {
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const extraBottom = Platform.OS === "android" ? insets.bottom : 0;
+
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -113,9 +117,9 @@ export default function TabLayout() {
           backgroundColor: "rgba(7, 9, 13, 0.92)",
           borderTopColor: BRAND.border,
           borderTopWidth: 1,
-          height: TAB_BAR.height,
+          height: (TAB_BAR.height ?? 72) + extraBottom,
           paddingTop: TAB_BAR.padTop,
-          paddingBottom: TAB_BAR.padBottom,
+          paddingBottom: (TAB_BAR.padBottom ?? 12) + extraBottom,
         },
       }}
     >

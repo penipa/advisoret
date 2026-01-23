@@ -1,7 +1,7 @@
 // app/venue/suggest.tsx
 // <SECTION:IMPORTS>
 import { useMemo, useState } from "react";
-import { SafeAreaView, ScrollView, TextInput, View } from "react-native";
+import { SafeAreaView, ScrollView, TextInput, View, Platform } from "react-native";
 import { useRouter } from "expo-router";
 
 import { supabase } from "../../src/lib/supabase";
@@ -9,6 +9,9 @@ import { theme } from "../../src/theme";
 import { TCard } from "../../src/ui/TCard";
 import { TText } from "../../src/ui/TText";
 import { TButton } from "../../src/ui/TButton";
+import { Stack } from "expo-router";
+
+import { createVenueProposal } from "../../src/lib/venueProposals";
 // </SECTION:IMPORTS>
 
 // <SECTION:HELPERS>
@@ -69,23 +72,16 @@ export default function SuggestVenueScreen() {
         return;
       }
 
-      const userId = session.user.id;
-
-      const { error } = await supabase.from("venue_proposals").insert({
-        user_id: userId,
+      await createVenueProposal(supabase, {
         name: nameClean,
         address_text: addressText.trim() ? clean(addressText) : null,
         city: cityClean || null,
         google_maps_url: mapsUrl.trim() ? mapsUrl.trim() : null,
         notes: notes.trim() ? notes.trim() : null,
+        payload: { source: "venue/suggest", platform: Platform.OS },
       });
 
-      if (error) {
-        setErr(error.message);
-        return;
-      }
-
-      setOk("Propuesta enviada ✅ Gracias. La revisaremos pronto.");
+      setOk("Propuesta enviada, mil gracias!. La revisaremos pronto.");
 
       // reset suave
       setName("");
@@ -103,152 +99,160 @@ export default function SuggestVenueScreen() {
 
   // <SECTION:RENDER>
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 140 }}>
-        <TText size={theme.font.title} weight="800">
-          Proponer local
-        </TText>
+    <>
+      <Stack.Screen
+        options={{
+          title: "Proponer local",
+          headerBackTitle: "Atrás",
+          headerBackTitleVisible: true,
+        }}
+      />
 
-        <TText muted style={{ marginTop: 8, lineHeight: 20 }}>
-          ¿No encuentras un sitio? Envíanos los datos y lo añadiremos tras revisarlo.
-        </TText>
-
-        <TCard style={{ marginTop: theme.spacing.lg }}>
-          <TText weight="700">Nombre *</TText>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Bar Manolo"
-            placeholderTextColor={theme.colors.textMuted}
-            editable={!saving}
-            style={{
-              marginTop: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.surface2,
-              opacity: saving ? 0.65 : 1,
-            }}
-          />
-
-          <View style={{ height: theme.spacing.md }} />
-
-          <TText weight="700">Dirección</TText>
-          <TextInput
-            value={addressText}
-            onChangeText={setAddressText}
-            placeholder="Calle, número…"
-            placeholderTextColor={theme.colors.textMuted}
-            editable={!saving}
-            style={{
-              marginTop: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.surface2,
-              opacity: saving ? 0.65 : 1,
-            }}
-          />
-
-          <View style={{ height: theme.spacing.md }} />
-
-          <TText weight="700">Ciudad</TText>
-          <TextInput
-            value={city}
-            onChangeText={setCity}
-            placeholder="Valencia"
-            placeholderTextColor={theme.colors.textMuted}
-            editable={!saving}
-            style={{
-              marginTop: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.surface2,
-              opacity: saving ? 0.65 : 1,
-            }}
-          />
-
-          <View style={{ height: theme.spacing.md }} />
-
-          <TText weight="700">Google Maps (opcional)</TText>
-          <TextInput
-            value={mapsUrl}
-            onChangeText={setMapsUrl}
-            placeholder="https://maps.google.com/…"
-            placeholderTextColor={theme.colors.textMuted}
-            editable={!saving}
-            autoCapitalize="none"
-            style={{
-              marginTop: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.surface2,
-              opacity: saving ? 0.65 : 1,
-            }}
-          />
-
-          <View style={{ height: theme.spacing.md }} />
-
-          <TText weight="700">Notas (opcional)</TText>
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Qué pedirías, horarios, detalles…"
-            placeholderTextColor={theme.colors.textMuted}
-            editable={!saving}
-            multiline
-            style={{
-              marginTop: 10,
-              minHeight: 110,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.surface2,
-              opacity: saving ? 0.65 : 1,
-            }}
-          />
-        </TCard>
-
-        {err ? (
-          <TText style={{ color: theme.colors.danger, marginTop: theme.spacing.md }}>
-            {err}
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 140 }}>
+          <TText size={theme.font.title} weight="800">
+            Proponer local
           </TText>
-        ) : null}
 
-        {ok ? (
-          <TText weight="700" style={{ marginTop: theme.spacing.md }}>
-            {ok}
+          <TText muted style={{ marginTop: 8, lineHeight: 20 }}>
+            ¿No encuentras un sitio? Envíanos los datos y lo añadiremos tras revisarlo.
           </TText>
-        ) : null}
 
-        <View style={{ marginTop: theme.spacing.lg }}>
-          <TButton
-            title={saving ? "Enviando..." : "Enviar propuesta"}
-            onPress={() => void submit()}
-            disabled={saving}
-          />
-          <View style={{ height: 10 }} />
-          <TButton title="Volver" variant="ghost" onPress={() => router.back()} disabled={saving} />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <TCard style={{ marginTop: theme.spacing.lg }}>
+            <TText weight="700">Nombre *</TText>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Bar Manolo"
+              placeholderTextColor={theme.colors.textMuted}
+              editable={!saving}
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                backgroundColor: theme.colors.surface2,
+                opacity: saving ? 0.65 : 1,
+              }}
+            />
+
+            <View style={{ height: theme.spacing.md }} />
+
+            <TText weight="700">Dirección</TText>
+            <TextInput
+              value={addressText}
+              onChangeText={setAddressText}
+              placeholder="Calle, número…"
+              placeholderTextColor={theme.colors.textMuted}
+              editable={!saving}
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                backgroundColor: theme.colors.surface2,
+                opacity: saving ? 0.65 : 1,
+              }}
+            />
+
+            <View style={{ height: theme.spacing.md }} />
+
+            <TText weight="700">Ciudad</TText>
+            <TextInput
+              value={city}
+              onChangeText={setCity}
+              placeholder="Valencia"
+              placeholderTextColor={theme.colors.textMuted}
+              editable={!saving}
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                backgroundColor: theme.colors.surface2,
+                opacity: saving ? 0.65 : 1,
+              }}
+            />
+
+            <View style={{ height: theme.spacing.md }} />
+
+            <TText weight="700">Google Maps (opcional)</TText>
+            <TextInput
+              value={mapsUrl}
+              onChangeText={setMapsUrl}
+              placeholder="https://maps.google.com/…"
+              placeholderTextColor={theme.colors.textMuted}
+              editable={!saving}
+              autoCapitalize="none"
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                backgroundColor: theme.colors.surface2,
+                opacity: saving ? 0.65 : 1,
+              }}
+            />
+
+            <View style={{ height: theme.spacing.md }} />
+
+            <TText weight="700">Notas (opcional)</TText>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Qué pedirías, horarios, detalles…"
+              placeholderTextColor={theme.colors.textMuted}
+              editable={!saving}
+              multiline
+              style={{
+                marginTop: 10,
+                minHeight: 110,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                backgroundColor: theme.colors.surface2,
+                opacity: saving ? 0.65 : 1,
+              }}
+            />
+          </TCard>
+
+          {err ? (
+            <TText style={{ color: theme.colors.danger, marginTop: theme.spacing.md }}>{err}</TText>
+          ) : null}
+
+          {ok ? (
+            <TText weight="700" style={{ marginTop: theme.spacing.md }}>
+              {ok}
+            </TText>
+          ) : null}
+
+          <View style={{ marginTop: theme.spacing.lg }}>
+            <TButton
+              title={saving ? "Enviando..." : "Enviar propuesta"}
+              onPress={() => void submit()}
+              disabled={saving}
+            />
+            <View style={{ height: 10 }} />
+            <TButton title="Volver" variant="ghost" onPress={() => router.back()} disabled={saving} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
   // </SECTION:RENDER>
 }
