@@ -1068,9 +1068,15 @@ export default function VenueScreen() {
                                   {open ? "Ocultar desglose" : "Ver desglose"}
                                 </TText>
                               </Pressable>
-
+                              
                               {open ? (
                                 <View style={{ marginTop: 12 }}>
+                                  {r.price_eur != null ? (
+                                    <TText muted style={{ marginBottom: 8 }}>
+                                      Precio: {fmtMoney(r.price_eur)}
+                                    </TText>
+                                  ) : null}
+
                                   {isL ? (
                                     <TText muted>Cargando desglose…</TText>
                                   ) : err ? (
