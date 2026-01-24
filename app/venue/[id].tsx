@@ -21,6 +21,9 @@ import { TText } from "../../src/ui/TText";
 import { TCard } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Buffer } from "buffer";
+
 
 // Reportes (función)
 import { createVenueReport } from "../../src/lib/venueReports";
@@ -572,27 +575,44 @@ export default function VenueScreen() {
       }
 
       const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         quality: 0.85,
         allowsEditing: true,
         aspect: [16, 9],
       });
-
+      
       if (res.canceled) return;
 
       const asset = res.assets?.[0];
       if (!asset?.uri) return;
 
-      // uri -> blob
-      const fileRes = await fetch(asset.uri);
-      const blob = await fileRes.blob();
+      // uri -> bytes (robusto iOS: evita blobs vacíos / ph://)
+      const manipulated = await ImageManipulator.manipulateAsync(asset.uri, [], {
+        compress: 0.85,
+        format: ImageManipulator.SaveFormat.JPEG,
+        base64: true,
+      });
+
+      if (!manipulated.base64) {
+        Alert.alert("Error", "No se pudo leer la imagen (base64 vacío).");
+        return;
+      }
+
+      const bytes = Buffer.from(manipulated.base64, "base64");
+
+      // Sanity check: nunca subir 0 bytes
+      if (bytes.length === 0) {
+        Alert.alert("Error", "Imagen vacía (0 bytes). No se sube.");
+        return;
+      }
 
       // Ruta estable (y compatible con venueCoverUrl): <venueId>/cover.jpg
-      const path = `${id}/cover.jpg`;
+      const path = `${id}/cover_${Date.now()}.jpg`;
 
-      const up = await supabase.storage.from(STORAGE_BUCKET_VENUE_PHOTOS).upload(path, blob, {
+      const up = await supabase.storage.from(STORAGE_BUCKET_VENUE_PHOTOS).upload(path, bytes, {
         contentType: "image/jpeg",
         upsert: true,
+        cacheControl: "60",
       });
 
       if (up.error) {
