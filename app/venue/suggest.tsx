@@ -38,59 +38,53 @@ export default function SuggestVenueScreen() {
   const [notes, setNotes] = useState("");
 
   const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
-
-  const nameClean = useMemo(() => clean(name), [name]);
-  const cityClean = useMemo(() => clean(city), [city]);
+  const [error, setError] = useState<string | null>(null);
   // </SECTION:STATE>
+
+  // <SECTION:DERIVED>
+  const canSubmit = useMemo(() => {
+    const n = clean(name);
+    const c = clean(city);
+    if (!n || !c) return false;
+    if (mapsUrl.trim() && !isProbablyUrl(mapsUrl)) return false;
+    return !saving;
+  }, [name, city, mapsUrl, saving]);
+  // </SECTION:DERIVED>
 
   // <SECTION:SUBMIT>
   const submit = async () => {
-    if (saving) return;
+    setError(null);
 
-    setErr(null);
-    setOk(null);
+    const n = clean(name);
+    const c = clean(city);
+    const a = clean(addressText);
+    const u = mapsUrl.trim();
+    const no = notes.trim();
 
-    if (!nameClean) {
-      setErr("Falta el nombre del local.");
+    if (!n || !c) {
+      setError("Faltan campos: nombre y ciudad.");
       return;
     }
-
-    if (mapsUrl.trim() && !isProbablyUrl(mapsUrl)) {
-      setErr("El enlace de Google Maps no parece una URL válida (debe empezar por http/https).");
+    if (u && !isProbablyUrl(u)) {
+      setError("El enlace debe empezar por http(s)://");
       return;
     }
-
-    setSaving(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      if (!session) {
-        router.push("/auth");
-        return;
-      }
+      setSaving(true);
 
       await createVenueProposal(supabase, {
-        name: nameClean,
-        address_text: addressText.trim() ? clean(addressText) : null,
-        city: cityClean || null,
-        google_maps_url: mapsUrl.trim() ? mapsUrl.trim() : null,
-        notes: notes.trim() ? notes.trim() : null,
+        name: n,
+        city: c,
+        address_text: a || null,
+        google_maps_url: u || null,
+        notes: no || null,
         payload: { source: "venue/suggest", platform: Platform.OS },
       });
 
-      setOk("Propuesta enviada, mil gracias!. La revisaremos pronto.");
-
-      // reset suave
-      setName("");
-      setAddressText("");
-      setCity("");
-      setMapsUrl("");
-      setNotes("");
+      router.back();
     } catch (e: any) {
-      setErr(e?.message ?? String(e));
+      setError(e?.message ?? "No se pudo enviar la propuesta.");
     } finally {
       setSaving(false);
     }
@@ -104,152 +98,132 @@ export default function SuggestVenueScreen() {
         options={{
           title: "Proponer local",
           headerBackTitle: "Atrás",
-          headerBackTitleVisible: true,
         }}
       />
 
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
-        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 140 }}>
-          <TText size={theme.font.title} weight="800">
-            Proponer local
-          </TText>
-
-          <TText muted style={{ marginTop: 8, lineHeight: 20 }}>
-            ¿No encuentras un sitio? Envíanos los datos y lo añadiremos tras revisarlo.
-          </TText>
-
-          <TCard style={{ marginTop: theme.spacing.lg }}>
-            <TText weight="700">Nombre *</TText>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Bar Manolo"
-              placeholderTextColor={theme.colors.textMuted}
-              editable={!saving}
-              style={{
-                marginTop: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.surface2,
-                opacity: saving ? 0.65 : 1,
-              }}
-            />
+        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
+          <TCard>
+            <TText weight="800">Proponer local</TText>
+            <TText muted style={{ marginTop: 6 }}>
+              Si no existe en la app, envíanos los datos y lo revisaremos.
+            </TText>
 
             <View style={{ height: theme.spacing.md }} />
 
-            <TText weight="700">Dirección</TText>
+            <TText weight="700" size={12} muted>
+              Nombre *
+            </TText>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Ej: Bar Manolo"
+              placeholderTextColor="#999"
+              style={{
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                marginTop: 6,
+              }}
+            />
+
+            <View style={{ height: 12 }} />
+
+            <TText weight="700" size={12} muted>
+              Ciudad *
+            </TText>
+            <TextInput
+              value={city}
+              onChangeText={setCity}
+              placeholder="Ej: Valencia"
+              placeholderTextColor="#999"
+              style={{
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                marginTop: 6,
+              }}
+            />
+
+            <View style={{ height: 12 }} />
+
+            <TText weight="700" size={12} muted>
+              Dirección (opcional)
+            </TText>
             <TextInput
               value={addressText}
               onChangeText={setAddressText}
               placeholder="Calle, número…"
-              placeholderTextColor={theme.colors.textMuted}
-              editable={!saving}
+              placeholderTextColor="#999"
               style={{
-                marginTop: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
                 borderWidth: 1,
                 borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.surface2,
-                opacity: saving ? 0.65 : 1,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                marginTop: 6,
               }}
             />
 
-            <View style={{ height: theme.spacing.md }} />
+            <View style={{ height: 12 }} />
 
-            <TText weight="700">Ciudad</TText>
-            <TextInput
-              value={city}
-              onChangeText={setCity}
-              placeholder="Valencia"
-              placeholderTextColor={theme.colors.textMuted}
-              editable={!saving}
-              style={{
-                marginTop: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.surface2,
-                opacity: saving ? 0.65 : 1,
-              }}
-            />
-
-            <View style={{ height: theme.spacing.md }} />
-
-            <TText weight="700">Google Maps (opcional)</TText>
+            <TText weight="700" size={12} muted>
+              Google Maps URL (opcional)
+            </TText>
             <TextInput
               value={mapsUrl}
               onChangeText={setMapsUrl}
-              placeholder="https://maps.google.com/…"
-              placeholderTextColor={theme.colors.textMuted}
-              editable={!saving}
+              placeholder="https://maps.app.goo.gl/…"
+              placeholderTextColor="#999"
               autoCapitalize="none"
+              autoCorrect={false}
               style={{
-                marginTop: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
                 borderWidth: 1,
                 borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.surface2,
-                opacity: saving ? 0.65 : 1,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                marginTop: 6,
               }}
             />
 
-            <View style={{ height: theme.spacing.md }} />
+            <View style={{ height: 12 }} />
 
-            <TText weight="700">Notas (opcional)</TText>
+            <TText weight="700" size={12} muted>
+              Notas (opcional)
+            </TText>
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="Qué pedirías, horarios, detalles…"
-              placeholderTextColor={theme.colors.textMuted}
-              editable={!saving}
+              placeholder="Ej: mejor bocadillo de…"
+              placeholderTextColor="#999"
               multiline
               style={{
-                marginTop: 10,
-                minHeight: 110,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
                 borderWidth: 1,
                 borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.surface2,
-                opacity: saving ? 0.65 : 1,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                marginTop: 6,
+                minHeight: 90,
+                textAlignVertical: "top",
               }}
             />
+
+            {error ? (
+              <TText style={{ color: theme.colors.danger, marginTop: 12 }} weight="700">
+                {error}
+              </TText>
+            ) : null}
+
+            <View style={{ marginTop: 14 }}>
+              <TButton title={saving ? "Enviando…" : "Enviar propuesta"} onPress={submit} disabled={!canSubmit} />
+            </View>
           </TCard>
-
-          {err ? (
-            <TText style={{ color: theme.colors.danger, marginTop: theme.spacing.md }}>{err}</TText>
-          ) : null}
-
-          {ok ? (
-            <TText weight="700" style={{ marginTop: theme.spacing.md }}>
-              {ok}
-            </TText>
-          ) : null}
-
-          <View style={{ marginTop: theme.spacing.lg }}>
-            <TButton
-              title={saving ? "Enviando..." : "Enviar propuesta"}
-              onPress={() => void submit()}
-              disabled={saving}
-            />
-            <View style={{ height: 10 }} />
-            <TButton title="Volver" variant="ghost" onPress={() => router.back()} disabled={saving} />
-          </View>
         </ScrollView>
       </SafeAreaView>
     </>

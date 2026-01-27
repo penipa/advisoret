@@ -667,7 +667,8 @@ export default function AccountScreen() {
                     backgroundColor: "transparent",
                   }}
                 >
-                  <TText size={12} weight="900" muted>
+                  {/* FIX: TText no acepta 900 */}
+                  <TText size={12} weight="800" muted>
                     {totalPending}
                   </TText>
                 </View>
@@ -910,6 +911,13 @@ export default function AccountScreen() {
                         ? `Local ${shortId(row.venue_id)}`
                         : "Local —";
 
+                    /* <SECTION:ADMIN_SUGGESTIONS_OPEN> */
+                    const openSuggestion = () => {
+                      // Nota: expo-router types pueden no incluir esta ruta hasta regen.
+                      router.push({ pathname: "/admin/suggestions/[id]" as any, params: { id: row.id } } as any);
+                    };
+                    /* </SECTION:ADMIN_SUGGESTIONS_OPEN> */
+
                     return (
                       <View
                         key={row.id}
@@ -948,14 +956,22 @@ export default function AccountScreen() {
 
                         {row.message ? <TText muted style={{ marginTop: 6 }}>{row.message}</TText> : null}
 
+                        {/* <SECTION:ADMIN_SUGGESTIONS_ACTIONS> */}
                         {row.status === "pending" ? (
-                          <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10 }}>
+                          <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
+                            <TButton title="Abrir" variant="ghost" onPress={openSuggestion} />
                             <TButton title="Aprobar" variant="ghost" onPress={() => void reviewSuggestion(row, "approved")} />
                             <TButton title="Rechazar" onPress={() => void reviewSuggestion(row, "rejected")} />
                           </View>
-                        ) : row.resolution_note ? (
-                          <TText muted style={{ marginTop: 8 }}>{row.resolution_note}</TText>
-                        ) : null}
+                        ) : (
+                          <>
+                            <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
+                              <TButton title="Abrir" variant="ghost" onPress={openSuggestion} />
+                            </View>
+                            {row.resolution_note ? <TText muted style={{ marginTop: 8 }}>{row.resolution_note}</TText> : null}
+                          </>
+                        )}
+                        {/* </SECTION:ADMIN_SUGGESTIONS_ACTIONS> */}
                       </View>
                     );
                   })}
@@ -1103,14 +1119,21 @@ export default function AccountScreen() {
                 <TText muted>No hay propuestas en esta bandeja.</TText>
               ) : (
                 <View style={{ gap: 12 as any }}>
+                  {/* <SECTION:ADMIN_PROPOSALS_LIST_ROWS> */}
                   {adminProposals.map((row) => {
                     const title = (row.name ?? "Propuesta").trim();
                     const line2 = [row.city, row.address_text].filter(Boolean).join(" · ");
                     const note = (row.notes ?? row.message ?? "").trim();
 
+                    const open = () => {
+                      // Ruta creada en Paso 1: app/admin/proposals/[id].tsx
+                      router.push({ pathname: "/admin/proposals/[id]", params: { id: row.id } });
+                    };
+
                     return (
-                      <View
+                      <Pressable
                         key={row.id}
+                        onPress={row.status === "pending" ? open : undefined}
                         style={{
                           paddingVertical: 12,
                           borderBottomWidth: 1,
@@ -1147,16 +1170,18 @@ export default function AccountScreen() {
                         {note ? <TText style={{ marginTop: 6 }}>{note}</TText> : null}
 
                         {row.status === "pending" ? (
-                          <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10 }}>
+                          <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
+                            <TButton title="Abrir" variant="ghost" onPress={open} />
                             <TButton title="Aprobar" variant="ghost" onPress={() => void reviewProposal(row, "approved")} />
                             <TButton title="Rechazar" onPress={() => void reviewProposal(row, "rejected")} />
                           </View>
                         ) : row.resolution_note ? (
                           <TText muted style={{ marginTop: 8 }}>{row.resolution_note}</TText>
                         ) : null}
-                      </View>
+                      </Pressable>
                     );
                   })}
+                  {/* </SECTION:ADMIN_PROPOSALS_LIST_ROWS> */}
                 </View>
               )}
             </TCard>

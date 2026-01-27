@@ -667,43 +667,43 @@ export default function VenueScreen() {
   }, [venue, isAdmin, loadVenue]);
   // </SECTION:ACTIONS_ADMIN_COORDS>
 
-  // <SECTION:ACTIONS_REPORTS>
-  const openReport = useCallback(() => {
-    if (reportDisabled) return;
-    setReportOpen(true);
-  }, [reportDisabled]);
+// <SECTION:ACTIONS_REPORTS>
+const openReport = useCallback(() => {
+  if (reportDisabled) return;
+  setReportOpen(true);
+}, [reportDisabled]);
 
-  const submitVenueReport = useCallback(
-    async (payload: { reason: string; details?: string | null }) => {
-      if (!id) return;
+const submitVenueReport = useCallback(
+  async (payload: { reason: string; message: string }) => {
+    if (!id) return;
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        Alert.alert("Inicia sesión", "Necesitas iniciar sesión para reportar.");
-        router.push("/auth");
-        return;
-      }
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      Alert.alert("Inicia sesión", "Necesitas iniciar sesión para reportar.");
+      router.push("/auth");
+      return;
+    }
 
-      try {
-        // ✅ Firma según TS: (client, args)
-        await createVenueReport(supabase as any, {
-          venueId: id,
-          reason: payload.reason,
-          message: payload.details ?? undefined,
-        });
+    try {
+      await createVenueReport(supabase as any, {
+        venueId: id,
+        reason: payload.reason,
+        message: (payload.message ?? "").trim() || undefined,
+      });
 
-        setReportOpen(false);
-        Alert.alert("Gracias", "Reporte enviado. Lo revisaremos pronto.");
-        void loadVenue();
-      } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "No se pudo enviar el reporte.");
-      }
-    },
-    [id, router, loadVenue]
-  );
-  // </SECTION:ACTIONS_REPORTS>
+      setReportOpen(false);
+      Alert.alert("Gracias", "Reporte enviado. Lo revisaremos pronto.");
+      void loadVenue();
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "No se pudo enviar el reporte.");
+    }
+  },
+  [id, router, loadVenue]
+);
+// </SECTION:ACTIONS_REPORTS>
 
-  // <SECTION:RENDER>
+
+// <SECTION:RENDER>
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 120 }}>
@@ -824,11 +824,7 @@ export default function VenueScreen() {
                       }
                     />
                   ) : (
-                    <TButton
-                      title="Sin coords"
-                      variant="ghost"
-                      onPress={() => Alert.alert("Info", "Aún sin coordenadas")}
-                    />
+                    <TButton title="Sin coords" variant="ghost" onPress={() => Alert.alert("Info", "Aún sin coordenadas")} />
                   )}
                 </View>
 
@@ -1088,7 +1084,7 @@ export default function VenueScreen() {
                                   {open ? "Ocultar desglose" : "Ver desglose"}
                                 </TText>
                               </Pressable>
-                              
+
                               {open ? (
                                 <View style={{ marginTop: 12 }}>
                                   {r.price_eur != null ? (
@@ -1161,7 +1157,12 @@ export default function VenueScreen() {
             </View>
 
             {reportOpen && ReportVenueModalComp ? (
-              <ReportVenueModalComp open={true} onClose={() => setReportOpen(false)} onSubmit={submitVenueReport} />
+              <ReportVenueModalComp
+                visible={true}
+                open={true}
+                onClose={() => setReportOpen(false)}
+                onSubmit={submitVenueReport}
+              />
             ) : null}
             {/* </SECTION:RENDER_FOOTER> */}
           </>
@@ -1169,6 +1170,6 @@ export default function VenueScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-  // </SECTION:RENDER>
+// </SECTION:RENDER>
 }
 // </SECTION:SCREEN>

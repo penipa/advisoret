@@ -61,7 +61,9 @@ export function ReportVenueModal(props: {
     try {
       setSubmitting(true);
       await onSubmit({ reason, message });
-      Alert.alert("¡Gracias!", "Lo revisaremos en breve.");
+
+      // ✅ IMPORTANTE: no mostramos Alert de éxito aquí para evitar duplicados.
+      // El caller (pantalla de venue) puede mostrar su confirmación.
       reset();
       onClose();
     } catch (e: any) {
