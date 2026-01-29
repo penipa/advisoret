@@ -329,166 +329,81 @@ export default function RateScreen() {
   }, [id, criteria.length, prefillChecked, editRatingId]);
   // </SECTION:EFFECT_PREFILL_THIS_MONTH>
 
-  // <SECTION:DB_MUTATIONS>
-  const doInsertNew = async (userId: string) => {
-    if (!id) return { error: { code: "NO_ID", message: "Missing id" }, ratingId: null };
+// <SECTION:DB_MUTATIONS>
+const saveRating = async () => {
+  if (!id) return;
+  if (editLoading) return;
+  if (saving) return; // anti doble tap “por si acaso”
 
-    const insertRating = await supabase
-      .from("ratings")
-      .insert({
-        venue_id: id,
-        product_type_id: ESMORZARET_PRODUCT_TYPE_ID,
-        user_id: userId,
-        comment: comment.trim() ? comment.trim() : null,
-        price_eur: parsedPrice === null ? null : parsedPrice,
-      })
-      .select("id")
-      .single();
+  setSaveErr(null);
+  setSaveMsg(null);
 
-    if (insertRating.error) return { error: insertRating.error, ratingId: null };
+  // Precio obligatorio (MVP-safe: validación en cliente; la RPC también lo exige)
+  if (parsedPrice === null) {
+    setSaveErr("Indica el precio por persona (ej: 8.50).");
+    return;
+  }
+  if (Number.isNaN(parsedPrice)) {
+    setSaveErr("El precio no parece un número válido. Ej: 8.50");
+    return;
+  }
 
-    const ratingId = (insertRating.data as any).id as string;
+  // Guardrail: criterios/scores siempre consistentes
+  if (!criteria.length) {
+    setSaveErr("No hay criterios cargados. Revisa rating_criteria.");
+    return;
+  }
 
-    const scoreRows = buildScoreRows(ratingId);
+  setSaving(true);
 
-    const insertScores = await supabase.from("rating_scores").insert(scoreRows);
-    if (insertScores.error) return { error: insertScores.error, ratingId: null };
+  try {
+    // Normaliza scores (1..5, sin nulls) en un objeto local
+    const normalizedScores: Record<string, number> = {};
+    for (const c of criteria) normalizedScores[c.id] = clampScore(scores[c.id] ?? 4);
 
-    return { error: null, ratingId };
-  };
-
-  const doUpdateExisting = async (ratingId: string) => {
-    const up = await supabase
-      .from("ratings")
-      .update({
-        comment: comment.trim() ? comment.trim() : null,
-        price_eur: parsedPrice === null ? null : parsedPrice,
-      })
-      .eq("id", ratingId)
-      .select("id");
-
-    if (up.error) return up.error;
-    if (!up.data || up.data.length === 0) {
-      return { message: "No se pudo actualizar (0 filas). Revisa RLS/policies en ratings." } as any;
-    }
-
-    const del = await supabase
-      .from("rating_scores")
-      .delete()
-      .eq("rating_id", ratingId)
-      .select("rating_id");
-
-    if (del.error) return del.error;
-    if (!del.data) {
-      return { message: "No se pudieron borrar scores (RLS/policies en rating_scores)." } as any;
-    }
-
-    const scoreRows = buildScoreRows(ratingId);
-
-    const ins = await supabase.from("rating_scores").insert(scoreRows);
-    if (ins.error) return ins.error;
-
-    return null;
-  };
-
-  const saveRating = async () => {
-    if (!id) return;
-    if (editLoading) return;
-    if (saving) return; // anti doble tap “por si acaso”
-
-    setSaveErr(null);
-    setSaveMsg(null);
-
-    if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
-      setSaveErr("El precio no parece un número válido. Ej: 8.50");
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session;
+    if (!session) {
+      router.push("/auth");
       return;
     }
 
-    // Guardrail: criterios/scores siempre consistentes
-    if (!criteria.length) {
-      setSaveErr("No hay criterios cargados. Revisa rating_criteria.");
+    const payload = {
+      p_venue_id: id,
+      p_product_type_id: ESMORZARET_PRODUCT_TYPE_ID,
+      p_price_eur: parsedPrice,
+      p_comment: comment,
+      p_scores: normalizedScores,
+    };
+
+    const res = await supabase.rpc("submit_rating_v1", payload);
+
+    if (res.error) {
+      setSaveErr(res.error.message);
       return;
     }
 
-    setSaving(true);
+    const row = Array.isArray(res.data) ? res.data[0] : res.data;
+    const action = (row as any)?.action as string | undefined;
 
-    try {
-      // normaliza scores antes de guardar (1..5, sin nulls)
-      setScores((prev) => {
-        const next: Record<string, number> = { ...prev };
-        for (const c of criteria) next[c.id] = clampScore(next[c.id] ?? 4);
-        return next;
-      });
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      if (!session) {
-        router.push("/auth");
-        return;
-      }
-
-      const userId = session.user.id;
-
-      // Modo edición: UPDATE real
-      if (editRatingId) {
-        const err = await doUpdateExisting(editRatingId);
-        if (err) {
-          setSaveErr(err.message);
-          return;
-        }
-
-        setSaveMsg("Actualizado ✅");
-        setTimeout(() => {
-          router.replace({ pathname: "/venue/[id]", params: { id, t: String(Date.now()) } });
-        }, 300);
-        return;
-      }
-
-      // Modo nuevo: INSERT
-      const res = await doInsertNew(userId);
-
-      if (res.error) {
-        const anyErr: any = res.error;
-
-        // ✅ Duplicado mensual: UPDATE directo
-        if (anyErr?.code === "23505") {
-          const existingId = await getThisMonthRatingId(userId);
-          if (existingId) {
-            setEditRatingId(existingId);
-            const err = await doUpdateExisting(existingId);
-            if (err) {
-              setSaveErr(err.message);
-              return;
-            }
-
-            setSaveMsg("Actualizado ✅");
-            setTimeout(() => {
-              router.replace({ pathname: "/venue/[id]", params: { id, t: String(Date.now()) } });
-            }, 300);
-            return;
-          }
-
-          setSaveMsg("Ya has valorado este local este mes. Cargando tu valoración…");
-          const fallbackId = await getThisMonthRatingId(userId);
-          if (fallbackId) await loadRatingForEditById(fallbackId);
-          return;
-        }
-
-        setSaveErr(res.error.message);
-        return;
-      }
-
+    if (action === "inserted_new_period") {
+      setSaveMsg("Guardado ✅ (han pasado 30 días: nueva valoración creada)");
+    } else if (action === "overwritten") {
+      setSaveMsg("Actualizado ✅");
+    } else {
       setSaveMsg("Guardado ✅ ¡Gracias!");
-      setTimeout(() => {
-        router.replace({ pathname: "/venue/[id]", params: { id, t: String(Date.now()) } });
-      }, 300);
-    } catch (e: any) {
-      setSaveErr(e?.message ?? String(e));
-    } finally {
-      setSaving(false);
     }
-  };
-  // </SECTION:DB_MUTATIONS>
+
+    setTimeout(() => {
+      router.replace({ pathname: "/venue/[id]", params: { id, t: String(Date.now()) } });
+    }, 300);
+  } catch (e: any) {
+    setSaveErr(e?.message ?? String(e));
+  } finally {
+    setSaving(false);
+  }
+};
+// </SECTION:DB_MUTATIONS>
 
   // <SECTION:RENDER>
   return (

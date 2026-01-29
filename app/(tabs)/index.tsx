@@ -529,12 +529,15 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
 
 // <SECTION:SCREEN>
 export default function HomeScreen() {
-  // <SECTION:SCREEN_INIT>
-  const router = useRouter();
+// <SECTION:SCREEN_INIT>
+const router = useRouter();
 
-  // Home es escaparate: la búsqueda vive en la pestaña "Explorar"
-  const SHOW_HOME_EXPLORE_ENTRY = false;
-  // </SECTION:SCREEN_INIT>
+// Home es escaparate: la búsqueda vive en la pestaña "Explorar"
+const SHOW_HOME_EXPLORE_ENTRY = false;
+
+// ✅ Product type “Esmorzaret” (fijo)
+const ESMORZARET_PRODUCT_TYPE_ID = "5b0af5a5-e73a-4381-9796-c6676c285206";
+// </SECTION:SCREEN_INIT>
 
   // <SECTION:STATE_RANKINGS>
   const [monthRows, setMonthRows] = useState<MonthRow[]>([]);
@@ -590,122 +593,75 @@ export default function HomeScreen() {
   }, [router, q, selectedCity, awardFilter]);
   // </SECTION:NAV_HELPERS>
 
-  // <SECTION:LOADERS_RANKINGS>
-  const loadAllTime = async () => {
-    // Ordenamos con bayes_score (estable con pocas reseñas),
-    // pero mostramos avg_score (media real) para evitar incongruencias tipo “tengo 1 reseña y sale otro número”.
-    const all = await supabase
-      .from("vw_venue_stats_all_time")
-      .select("venue_id,name,city,bayes_score,avg_score,ratings_count")
-      .order("bayes_score", { ascending: false })
-      .limit(5);
+// <SECTION:LOADERS_RANKINGS>
+const loadAllTime = async () => {
+  // Ordenamos con bayes_score (estable con pocas reseñas),
+  // pero mostramos avg_score (media real) para evitar incongruencias tipo “tengo 1 reseña y sale otro número”.
+  const all = await supabase
+    .from("vw_venue_stats_all_time_current")
+    .select("venue_id,name,city,bayes_score,avg_score,ratings_count")
+    .order("bayes_score", { ascending: false })
+    .limit(5);
 
-    if (all.error) throw new Error(all.error.message);
-    setAllRows((all.data ?? []) as unknown as AllTimeRow[]);
-  };
+  if (all.error) throw new Error(all.error.message);
+  setAllRows((all.data ?? []) as unknown as AllTimeRow[]);
+};
 
-  async function loadMonthNatural() {
-    const { startISO, endISO } = monthRangeISO();
+async function loadMonthNatural() {
+  // ✅ “Mejor del mes pasado” (foto del mes anterior): viene de BD
+  const r = await supabase
+    .from("vw_venue_stats_prev_month")
+    .select("venue_id,name,city,product_type_id,bayes_score,avg_score,ratings_count")
+    .eq("product_type_id", ESMORZARET_PRODUCT_TYPE_ID)
+    .order("bayes_score", { ascending: false })
+    .limit(5);
 
-    // 1) Ratings del mes (solo para ordenar el “top del mes”)
-    const r = await supabase
-      .from("vw_rating_overall")
-      .select("venue_id,overall_score,created_at")
-      .gte("created_at", startISO)
-      .lt("created_at", endISO)
-      .limit(500);
+  if (r.error) throw new Error(r.error.message);
 
-    if (r.error) throw new Error(r.error.message);
+  const rows = (r.data ?? []) as any[];
+  
 
-    const rows = (r.data ?? []) as Array<{ venue_id: string; overall_score: number }>;
-    if (rows.length === 0) {
-      setMonthRows([]);
-      return;
-    }
+  // Reusamos MonthRow para render existente
+  const mapped: MonthRow[] = rows.map((x) => ({
+    venue_id: String(x.venue_id),
+    name: String(x.name ?? "—"),
+    city: String(x.city ?? ""),
+    score_month: Number(x.bayes_score ?? 0),
+    ratings_count_month: Number(x.ratings_count ?? 0),
+    avg_score: Number(x.avg_score ?? 0),
+    ratings_count: Number(x.ratings_count ?? 0),
+  }));
 
-    // 2) Media simple del mes por venue_id
-    const agg = new Map<string, { sum: number; n: number }>();
-    for (const it of rows) {
-      const vId = String(it.venue_id);
-      const s = Number(it.overall_score ?? 0);
-      const cur = agg.get(vId) ?? { sum: 0, n: 0 };
-      cur.sum += s;
-      cur.n += 1;
-      agg.set(vId, cur);
-    }
+  setMonthRows(mapped);
+}
 
-    const computed = Array.from(agg.entries()).map(([venue_id, a]) => ({
-      venue_id,
-      score_month: a.n > 0 ? a.sum / a.n : 0,
-      ratings_count_month: a.n,
-    }));
+const loadMe = async () => {
+  const u = await supabase.auth.getUser();
+  setMeId(u.data.user?.id ?? null);
+};
 
-    computed.sort((a, b) => b.score_month - a.score_month);
-    const top = computed.slice(0, 5);
-
-    const ids = top.map((x) => x.venue_id);
-
-    // 3) Metadatos + media histórica (lo que mostramos como “puntuación”)
-    const g = await supabase
-      .from("vw_venue_stats_all_time")
-      .select("venue_id,name,city,avg_score,ratings_count")
-      .in("venue_id", ids);
-
-    if (g.error) throw new Error(g.error.message);
-
-    const info = new Map<string, { name: string; city: string; avg: number; n: number }>();
-    for (const row of (g.data ?? []) as any[]) {
-      info.set(String(row.venue_id), {
-        name: String(row.name ?? "—"),
-        city: String(row.city ?? ""),
-        avg: Number(row.avg_score ?? 0),
-        n: Number(row.ratings_count ?? 0),
-      });
-    }
-
-    const finalRows: MonthRow[] = top.map((x) => {
-      const i = info.get(x.venue_id);
-      return {
-        venue_id: x.venue_id,
-        name: i?.name ?? "—",
-        city: i?.city ?? "",
-        score_month: x.score_month,
-        ratings_count_month: x.ratings_count_month,
-        avg_score: i?.avg ?? 0,
-        ratings_count: i?.n ?? 0,
-      };
-    });
-
-    setMonthRows(finalRows);
+const loadCities = async () => {
+  const res = await supabase.from("venues").select("city").limit(500);
+  if (res.error) return;
+  const uniq = new Set<string>();
+  for (const r of (res.data ?? []) as any[]) {
+    const c = (r.city ?? "").trim();
+    if (c) uniq.add(c);
   }
+  const arr = Array.from(uniq.values()).sort((a, b) => a.localeCompare(b, "es"));
+  setCities(arr);
+};
 
-  const loadMe = async () => {
-    const u = await supabase.auth.getUser();
-    setMeId(u.data.user?.id ?? null);
-  };
-
-  const loadCities = async () => {
-    const res = await supabase.from("venues").select("city").limit(500);
-    if (res.error) return;
-    const uniq = new Set<string>();
-    for (const r of (res.data ?? []) as any[]) {
-      const c = (r.city ?? "").trim();
-      if (c) uniq.add(c);
-    }
-    const arr = Array.from(uniq.values()).sort((a, b) => a.localeCompare(b, "es"));
-    setCities(arr);
-  };
-
-  const loadRankings = async () => {
-    setError(null);
-    setRankLoading(true);
-    try {
-      await Promise.all([loadAllTime(), loadMonthNatural(), loadMe(), loadCities()]);
-    } finally {
-      setRankLoading(false);
-    }
-  };
-  // </SECTION:LOADERS_RANKINGS>
+const loadRankings = async () => {
+  setError(null);
+  setRankLoading(true);
+  try {
+    await Promise.all([loadAllTime(), loadMonthNatural(), loadMe(), loadCities()]);
+  } finally {
+    setRankLoading(false);
+  }
+};
+// </SECTION:LOADERS_RANKINGS>
 
   // <SECTION:LOADERS_NEW>
   const loadNew = async () => {
@@ -727,7 +683,7 @@ export default function HomeScreen() {
 
       const ids = base.map((x) => x.id);
       const rr = await supabase
-        .from("vw_venue_stats_all_time")
+        .from("vw_venue_stats_all_time_current")
         .select("venue_id,avg_score,ratings_count")
         .in("venue_id", ids);
 
@@ -816,7 +772,7 @@ export default function HomeScreen() {
       // Enriquecer rating (all-time)
       const ids = withDist.map((x) => x.id);
       const rr = await supabase
-        .from("vw_venue_stats_all_time")
+        .from("vw_venue_stats_all_time_current")
         .select("venue_id,avg_score,ratings_count")
         .in("venue_id", ids);
 
@@ -991,272 +947,276 @@ export default function HomeScreen() {
   );
   // </SECTION:FOCUS_EFFECT>
 
-  // <SECTION:RENDER>
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
-        {/* <SECTION:HOME_HEADER> */}
-        <BrandLockup
-          title="Advisoret"
-          subtitle="Esmorzarets"
-          iconSource={BRAND_A}
-          style={{ marginBottom: theme.spacing.md }}
+// <SECTION:RENDER>
+return (
+  <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+    <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
+      {/* <SECTION:HOME_HEADER> */}
+      <BrandLockup
+        title="Advisoret"
+        subtitle="Esmorzarets"
+        iconSource={BRAND_A}
+        style={{ marginBottom: theme.spacing.md }}
+      />
+
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: theme.spacing.lg + 6 }}>
+        <TButton
+          title="+ Proponer local"
+          variant="ghost"
+          style={{ paddingHorizontal: 12, paddingVertical: 8, alignSelf: "flex-start" }}
+          onPress={() => router.push("/venue/suggest")}
         />
+      </View>
+      {/* </SECTION:HOME_HEADER> */}
 
-        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: theme.spacing.lg + 6 }}>
-          <TButton
-            title="+ Proponer local"
-            variant="ghost"
-            style={{ paddingHorizontal: 12, paddingVertical: 8, alignSelf: "flex-start" }}
-            onPress={() => router.push("/venue/suggest")}
-          />
-        </View>
-        {/* </SECTION:HOME_HEADER> */}
+      {error && (
+        <TText style={{ color: theme.colors.danger, marginBottom: theme.spacing.md }}>
+          Error: {error}
+        </TText>
+      )}
 
-        {error && (
-          <TText style={{ color: theme.colors.danger, marginBottom: theme.spacing.md }}>
-            Error: {error}
-          </TText>
-        )}
+      {/* Rankings primero */}
+      {monthRows.length >= 2 ? (
+        <>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <TText size={theme.font.h2} weight="700">
+              Mejor del mes pasado
+            </TText>
+            <TButton
+              title="Ver todos"
+              variant="ghost"
+              style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
+              onPress={() => router.push("/rankings/month")}
+            />
+          </View>
 
-        {/* Rankings primero */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <TText size={theme.font.h2} weight="700">
-            Mejores del mes
-          </TText>
-          <TButton
-            title="Ver todos"
-            variant="ghost"
-            style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
-            onPress={() => router.push("/rankings/month")}
-          />
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-          {rankLoading && monthRows.length === 0 ? (
-            <>
-              <SkeletonRankCard />
-              <SkeletonRankCard />
-            </>
-          ) : null}
-          {monthRows.map((r) => (
-            <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
-              <RankCard
-                title={r.name}
-                subtitle={
-                  (r.city ?? "") +
-                  " · Mes " +
-                  Number(r.score_month ?? 0).toFixed(1) +
-                  " (" +
-                  Number(r.ratings_count_month ?? 0) +
-                  ")"
-                }
-                score={Number(r.avg_score ?? 0)}
-                n={Number(r.ratings_count ?? 0)}
-                badge="MES"
-              />
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
-
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <TText size={theme.font.h2} weight="700">
-            Mejores de siempre
-          </TText>
-          <TButton
-            title="Ver todos"
-            variant="ghost"
-            style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
-            onPress={() => router.push("/rankings/all")}
-          />
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-          {rankLoading && allRows.length === 0 ? (
-            <>
-              <SkeletonRankCard />
-              <SkeletonRankCard />
-            </>
-          ) : null}
-          {allRows.map((r) => (
-            <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
-              <RankCard title={r.name} subtitle={r.city} score={Number(r.avg_score ?? 0)} n={Number(r.ratings_count ?? 0)} />
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
-
-        {/* Premium default content */}
-        {!shouldShowExplore ? (
-          <>
-            {/* Cerca de ti */}
-            <View style={{ marginBottom: theme.spacing.lg }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <TText size={theme.font.h2} weight="700">
-                  Cerca de ti
-                </TText>
-
-                <TButton
-                  title="Actualizar"
-                  variant="ghost"
-                  onPress={() => void requestAndLoadNear()}
-                  style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+            {rankLoading && monthRows.length === 0 ? (
+              <>
+                <SkeletonRankCard />
+                <SkeletonRankCard />
+              </>
+            ) : null}
+            {monthRows.map((r) => (
+              <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
+                <RankCard
+                  title={r.name}
+                  subtitle={
+                    (r.city ?? "") +
+                    " · Mes pasado " +
+                    Number(r.score_month ?? 0).toFixed(1) +
+                    " (" +
+                    Number(r.ratings_count_month ?? 0) +
+                    ")"
+                  }
+                  score={Number(r.avg_score ?? 0)}
+                  n={Number(r.ratings_count ?? 0)}
+                  badge="MES"
                 />
-              </View>
+              </Pressable>
+            ))}
+          </ScrollView>
 
-              {nearLoading ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-                  <SkeletonWideCard />
-                  <SkeletonWideCard />
-                </ScrollView>
-              ) : locDenied ? (
-                <TText muted style={{ marginTop: 10 }}>
-                  Activa la ubicación para ver los locales cercanos.
-                </TText>
-              ) : nearRows.length > 0 ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-                  {nearRows.map((v) => (
-                    <NearVenueCard key={v.id} v={v} cacheBust={coverBust} onPress={() => goVenue(v.id)} />
-                  ))}
-                </ScrollView>
-              ) : (
-                <TText muted style={{ marginTop: 10 }}>No hay locales con coordenadas suficientes cerca (aún).</TText>
-              )}
-            </View>
+          <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
+        </>
+      ) : null}
 
-            {/* Nuevos */}
-            <View style={{ marginBottom: theme.spacing.lg }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <TText size={theme.font.h2} weight="700">
-                  Nuevos
-                </TText>
-              </View>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <TText size={theme.font.h2} weight="700">
+          Mejores de siempre
+        </TText>
+        <TButton
+          title="Ver todos"
+          variant="ghost"
+          style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
+          onPress={() => router.push("/rankings/all")}
+        />
+      </View>
 
-              {newLoading ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-                  <SkeletonWideCard />
-                  <SkeletonWideCard />
-                </ScrollView>
-              ) : newRows.length > 0 ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-                  {newRows.map((v) => (
-                    <NewVenueCard key={v.id} v={v} cacheBust={coverBust} onPress={() => goVenue(v.id)} />
-                  ))}
-                </ScrollView>
-              ) : (
-                <TText muted style={{ marginTop: 10 }}>Aún no hay nuevos locales.</TText>
-              )}
-            </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+        {rankLoading && allRows.length === 0 ? (
+          <>
+            <SkeletonRankCard />
+            <SkeletonRankCard />
           </>
         ) : null}
+        {allRows.map((r) => (
+          <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
+            <RankCard title={r.name} subtitle={r.city} score={Number(r.avg_score ?? 0)} n={Number(r.ratings_count ?? 0)} />
+          </Pressable>
+        ))}
+      </ScrollView>
 
-        {/* Explorar */}
-        {SHOW_HOME_EXPLORE_ENTRY ? (
+      <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
+
+      {/* Premium default content */}
+      {!shouldShowExplore ? (
+        <>
+          {/* Cerca de ti */}
           <View style={{ marginBottom: theme.spacing.lg }}>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.surface,
-                borderRadius: theme.radius.lg,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-              }}
-            >
-              <TextInput
-                value={q}
-                onChangeText={setQ}
-                placeholder="Buscar local, ciudad o dirección…"
-                placeholderTextColor={theme.colors.textMuted}
-                style={{ color: theme.colors.text, fontSize: 16 }}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-                onSubmitEditing={goExplore}
-                blurOnSubmit={true}
-                clearButtonMode="while-editing"
-              />
-            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <TText size={theme.font.h2} weight="700">
+                Cerca de ti
+              </TText>
 
-            <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 10 }}>
-              <Chip label="Todo" active={chip === "all"} onPress={() => setChip("all")} />
-              <Chip label={chipLabelCity} active={chip === "city"} onPress={() => setChip("city")} />
-              <Chip label="Siguiendo" active={chip === "following"} onPress={() => setChip("following")} />
-              <Chip label="Mis valoraciones" active={chip === "mine"} onPress={() => setChip("mine")} />
-            </View>
-
-            {chip === "city" && selectedCity ? (
               <TButton
-                title="Quitar filtro"
+                title="Actualizar"
                 variant="ghost"
-                onPress={() => {
-                  setSelectedCity(null);
-                  setChip("all");
-                }}
-                style={{ alignSelf: "flex-start", marginTop: 6, paddingHorizontal: 10, paddingVertical: 6 }}
+                onPress={() => void requestAndLoadNear()}
+                style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
               />
-            ) : null}
+            </View>
 
-            {chip === "city" && cities.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
-                {cities.slice(0, 20).map((c) => (
-                  <Chip key={c} label={c} active={selectedCity === c} onPress={() => setSelectedCity(c)} />
+            {nearLoading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                <SkeletonWideCard />
+                <SkeletonWideCard />
+              </ScrollView>
+            ) : locDenied ? (
+              <TText muted style={{ marginTop: 10 }}>
+                Activa la ubicación para ver los locales cercanos.
+              </TText>
+            ) : nearRows.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                {nearRows.map((v) => (
+                  <NearVenueCard key={v.id} v={v} cacheBust={coverBust} onPress={() => goVenue(v.id)} />
                 ))}
               </ScrollView>
-            ) : null}
-
-            {chip === "city" && !selectedCity ? (
-              <TText muted style={{ marginTop: 8 }}>Elige una localidad para filtrar.</TText>
-            ) : null}
-
-            {exploreLoading ? (
-              <View style={{ marginTop: 10 }}>
-                <TSkeletonLine width="35%" height={12} />
-              </View>
-            ) : null}
-
-            {exploreLoading && shouldShowExplore ? (
-              <View style={{ marginTop: theme.spacing.sm }}>
-                <SkeletonExploreRow />
-                <SkeletonExploreRow />
-              </View>
-            ) : null}
-
-            {!exploreLoading && shouldShowExplore && exploreRows.length > 0 ? (
-              <View style={{ marginTop: theme.spacing.sm }}>
-                {exploreRows.slice(0, 12).map((v) => (
-                  <Pressable key={v.id} onPress={() => goVenue(v.id)}>
-                    <TCard style={{ marginBottom: theme.spacing.sm }}>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <VenueThumb name={v.name} coverPath={v.cover_photo_path} cacheBust={coverBust} />
-
-                        <View style={{ marginLeft: 12, flex: 1 }}>
-                          <TText weight="800" numberOfLines={1}>
-                            {v.name}
-                          </TText>
-                          <TText muted style={{ marginTop: 6 }} numberOfLines={2}>
-                            {v.city}
-                            {v.address_text ? " · " + v.address_text : ""}
-                          </TText>
-                        </View>
-                      </View>
-                    </TCard>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-
-            {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? (
-              <TText muted style={{ marginTop: 10 }}>Sin resultados.</TText>
-            ) : null}
+            ) : (
+              <TText muted style={{ marginTop: 10 }}>No hay locales con coordenadas suficientes cerca (aún).</TText>
+            )}
           </View>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
-  );
-  // </SECTION:RENDER>
+
+          {/* Nuevos */}
+          <View style={{ marginBottom: theme.spacing.lg }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <TText size={theme.font.h2} weight="700">
+                Nuevos
+              </TText>
+            </View>
+
+            {newLoading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                <SkeletonWideCard />
+                <SkeletonWideCard />
+              </ScrollView>
+            ) : newRows.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                {newRows.map((v) => (
+                  <NewVenueCard key={v.id} v={v} cacheBust={coverBust} onPress={() => goVenue(v.id)} />
+                ))}
+              </ScrollView>
+            ) : (
+              <TText muted style={{ marginTop: 10 }}>Aún no hay nuevos locales.</TText>
+            )}
+          </View>
+        </>
+      ) : null}
+
+      {/* Explorar */}
+      {SHOW_HOME_EXPLORE_ENTRY ? (
+        <View style={{ marginBottom: theme.spacing.lg }}>
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surface,
+              borderRadius: theme.radius.lg,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+            }}
+          >
+            <TextInput
+              value={q}
+              onChangeText={setQ}
+              placeholder="Buscar local, ciudad o dirección…"
+              placeholderTextColor={theme.colors.textMuted}
+              style={{ color: theme.colors.text, fontSize: 16 }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              onSubmitEditing={goExplore}
+              blurOnSubmit={true}
+              clearButtonMode="while-editing"
+            />
+          </View>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 10 }}>
+            <Chip label="Todo" active={chip === "all"} onPress={() => setChip("all")} />
+            <Chip label={chipLabelCity} active={chip === "city"} onPress={() => setChip("city")} />
+            <Chip label="Siguiendo" active={chip === "following"} onPress={() => setChip("following")} />
+            <Chip label="Mis valoraciones" active={chip === "mine"} onPress={() => setChip("mine")} />
+          </View>
+
+          {chip === "city" && selectedCity ? (
+            <TButton
+              title="Quitar filtro"
+              variant="ghost"
+              onPress={() => {
+                setSelectedCity(null);
+                setChip("all");
+              }}
+              style={{ alignSelf: "flex-start", marginTop: 6, paddingHorizontal: 10, paddingVertical: 6 }}
+            />
+          ) : null}
+
+          {chip === "city" && cities.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
+              {cities.slice(0, 20).map((c) => (
+                <Chip key={c} label={c} active={selectedCity === c} onPress={() => setSelectedCity(c)} />
+              ))}
+            </ScrollView>
+          ) : null}
+
+          {chip === "city" && !selectedCity ? (
+            <TText muted style={{ marginTop: 8 }}>Elige una localidad para filtrar.</TText>
+          ) : null}
+
+          {exploreLoading ? (
+            <View style={{ marginTop: 10 }}>
+              <TSkeletonLine width="35%" height={12} />
+            </View>
+          ) : null}
+
+          {exploreLoading && shouldShowExplore ? (
+            <View style={{ marginTop: theme.spacing.sm }}>
+              <SkeletonExploreRow />
+              <SkeletonExploreRow />
+            </View>
+          ) : null}
+
+          {!exploreLoading && shouldShowExplore && exploreRows.length > 0 ? (
+            <View style={{ marginTop: theme.spacing.sm }}>
+              {exploreRows.slice(0, 12).map((v) => (
+                <Pressable key={v.id} onPress={() => goVenue(v.id)}>
+                  <TCard style={{ marginBottom: theme.spacing.sm }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <VenueThumb name={v.name} coverPath={v.cover_photo_path} cacheBust={coverBust} />
+
+                      <View style={{ marginLeft: 12, flex: 1 }}>
+                        <TText weight="800" numberOfLines={1}>
+                          {v.name}
+                        </TText>
+                        <TText muted style={{ marginTop: 6 }} numberOfLines={2}>
+                          {v.city}
+                          {v.address_text ? " · " + v.address_text : ""}
+                        </TText>
+                      </View>
+                    </View>
+                  </TCard>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? (
+            <TText muted style={{ marginTop: 10 }}>Sin resultados.</TText>
+          ) : null}
+        </View>
+      ) : null}
+    </ScrollView>
+  </SafeAreaView>
+);
+// </SECTION:RENDER>
 }
 // </SECTION:SCREEN>

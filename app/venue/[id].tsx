@@ -263,229 +263,229 @@ export default function VenueScreen() {
   }, [computeIsAdmin]);
   // </SECTION:ADMIN_EFFECT>
 
-  // <SECTION:LOAD_VENUE>
-  const loadVenue = useCallback(async () => {
-    if (!id) return;
+// <SECTION:LOAD_VENUE>
+const loadVenue = useCallback(async () => {
+  if (!id) return;
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    // Reset desglose
-    setBreakdownOpen(false);
-    setBreakdownErr(null);
-    setCriteriaBreakdown(null);
+  // Reset desglose
+  setBreakdownOpen(false);
+  setBreakdownErr(null);
+  setCriteriaBreakdown(null);
 
-    // Reset desglose por reseña
-    setReviewBreakdownOpen({});
-    setReviewBreakdownLoading({});
-    setReviewBreakdownErr({});
-    setReviewBreakdownData({});
+  // Reset desglose por reseña
+  setReviewBreakdownOpen({});
+  setReviewBreakdownLoading({});
+  setReviewBreakdownErr({});
+  setReviewBreakdownData({});
 
-    try {
-      const vView = await supabase
-        .from("vw_venues_with_cacau")
-        .select(
-          "id,name,city,address_text,google_maps_url,cover_photo_path,lat,lon,has_cacau_dor,latest_cacau_year,cacau_badge_text,cacau_badge_subtext"
-        )
-        .eq("id", id)
+  try {
+    const vView = await supabase
+      .from("vw_venues_with_cacau")
+      .select(
+        "id,name,city,address_text,google_maps_url,cover_photo_path,lat,lon,has_cacau_dor,latest_cacau_year,cacau_badge_text,cacau_badge_subtext"
+      )
+      .eq("id", id)
+      .maybeSingle();
+
+    const v =
+      !vView.error && vView.data
+        ? (vView.data as Venue)
+        : (
+            await supabase
+              .from("venues")
+              .select("id,name,city,address_text,google_maps_url,cover_photo_path,lat,lon")
+              .eq("id", id)
+              .single()
+          ).data;
+
+    if (!v) {
+      setError(vView.error?.message ?? "No se encontró el local.");
+      setVenue(null);
+      setReviews([]);
+      setProfiles({});
+      return;
+    }
+
+    setVenue(v as Venue);
+
+    // Puntuación a mostrar = media REAL basada en vw_rating_overall_current (solo current)
+    const stats = await supabase
+      .from("vw_rating_overall_current")
+      .select("overall_score", { count: "exact" })
+      .eq("venue_id", id)
+      .limit(2000);
+
+    if (!stats.error && stats.data) {
+      const arr = (stats.data ?? []) as Array<{ overall_score: number }>;
+      const n = Number(stats.count ?? arr.length ?? 0);
+      const sum = arr.reduce((acc, it) => acc + Number(it.overall_score ?? 0), 0);
+      const avg = arr.length > 0 ? sum / arr.length : 0;
+
+      setVenueScore(avg);
+      setVenueCount(n);
+    } else {
+      setVenueScore(0);
+      setVenueCount(0);
+    }
+
+    const r = await supabase
+      .from("vw_rating_overall_current")
+      .select("rating_id,user_id,created_at,last_rated_at,comment,price_eur,overall_score")
+      .eq("venue_id", id)
+      .order("last_rated_at", { ascending: false })
+      .limit(50);
+
+    if (r.error) {
+      setReviews([]);
+    } else {
+      setReviews((r.data ?? []) as any);
+    }
+
+    const userIds = Array.from(new Set((r.data ?? []).map((x: any) => x.user_id).filter(Boolean)));
+    if (userIds.length) {
+      const p = await supabase.from("profiles").select("id,display_name,avatar_url").in("id", userIds);
+      if (!p.error) {
+        const map: Record<string, ProfileMini> = {};
+        (p.data ?? []).forEach((row: any) => (map[row.id] = row));
+        setProfiles(map);
+      }
+    }
+
+    // Mi reporte en esta ficha (si existe)
+    const uid = await getMyUserId();
+    if (uid) {
+      setMyReportLoading(true);
+      const mr = await supabase
+        .from("venue_reports")
+        .select("id,status,resolution_note,created_at")
+        .eq("venue_id", id)
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      const v =
-        !vView.error && vView.data
-          ? (vView.data as Venue)
-          : (
-              await supabase
-                .from("venues")
-                .select("id,name,city,address_text,google_maps_url,cover_photo_path,lat,lon")
-                .eq("id", id)
-                .single()
-            ).data;
+      if (!mr.error && mr.data) setMyReport(mr.data as any);
+      else setMyReport(null);
 
-      if (!v) {
-        setError(vView.error?.message ?? "No se encontró el local.");
-        setVenue(null);
-        setReviews([]);
-        setProfiles({});
-        return;
-      }
-
-      setVenue(v as Venue);
-
-      // Puntuación a mostrar = media REAL basada en vw_rating_overall
-      const stats = await supabase
-        .from("vw_rating_overall")
-        .select("overall_score", { count: "exact" })
-        .eq("venue_id", id)
-        .limit(2000);
-
-      if (!stats.error && stats.data) {
-        const arr = (stats.data ?? []) as Array<{ overall_score: number }>;
-        const n = Number(stats.count ?? arr.length ?? 0);
-        const sum = arr.reduce((acc, it) => acc + Number(it.overall_score ?? 0), 0);
-        const avg = arr.length > 0 ? sum / arr.length : 0;
-
-        setVenueScore(avg);
-        setVenueCount(n);
-      } else {
-        setVenueScore(0);
-        setVenueCount(0);
-      }
-
-      const r = await supabase
-        .from("vw_rating_overall")
-        .select("rating_id,user_id,created_at,comment,price_eur,overall_score")
-        .eq("venue_id", id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (r.error) {
-        setReviews([]);
-      } else {
-        setReviews((r.data ?? []) as any);
-      }
-
-      const userIds = Array.from(new Set((r.data ?? []).map((x: any) => x.user_id).filter(Boolean)));
-      if (userIds.length) {
-        const p = await supabase.from("profiles").select("id,display_name,avatar_url").in("id", userIds);
-        if (!p.error) {
-          const map: Record<string, ProfileMini> = {};
-          (p.data ?? []).forEach((row: any) => (map[row.id] = row));
-          setProfiles(map);
-        }
-      }
-
-      // Mi reporte en esta ficha (si existe)
-      const uid = await getMyUserId();
-      if (uid) {
-        setMyReportLoading(true);
-        const mr = await supabase
-          .from("venue_reports")
-          .select("id,status,resolution_note,created_at")
-          .eq("venue_id", id)
-          .eq("user_id", uid)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (!mr.error && mr.data) setMyReport(mr.data as any);
-        else setMyReport(null);
-
-        setMyReportLoading(false);
-      } else {
-        setMyReport(null);
-      }
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
-    } finally {
-      setLoading(false);
+      setMyReportLoading(false);
+    } else {
+      setMyReport(null);
     }
-  }, [id, getMyUserId]);
-  // </SECTION:LOAD_VENUE>
+  } catch (e: any) {
+    setError(e?.message ?? String(e));
+  } finally {
+    setLoading(false);
+  }
+}, [id, getMyUserId]);
+// </SECTION:LOAD_VENUE>
 
-  // <SECTION:LOAD_CRITERIA_BREAKDOWN>
-  const loadCriteriaBreakdown = useCallback(async () => {
-    if (!id) return;
-    if (breakdownLoading) return;
+// <SECTION:LOAD_CRITERIA_BREAKDOWN>
+const loadCriteriaBreakdown = useCallback(async () => {
+  if (!id) return;
+  if (breakdownLoading) return;
 
-    setBreakdownLoading(true);
-    setBreakdownErr(null);
+  setBreakdownLoading(true);
+  setBreakdownErr(null);
+
+  try {
+    const r = await supabase
+      .from("vw_venue_criteria_breakdown_current")
+      .select("venue_id,product_type_id,criterion_id,code,name_es,name_en,avg_score,n")
+      .eq("venue_id", id)
+      .eq("product_type_id", ESMORZARET_PRODUCT_TYPE_ID);
+
+    if (r.error) {
+      setBreakdownErr(r.error.message);
+      setCriteriaBreakdown([]);
+      return;
+    }
+
+    const rows = ((r.data ?? []) as any[]).map((x) => ({
+      venue_id: String(x.venue_id),
+      product_type_id: String(x.product_type_id),
+      criterion_id: String(x.criterion_id),
+      code: x.code ?? null,
+      name_es: x.name_es ?? null,
+      name_en: x.name_en ?? null,
+      avg_score: Number(x.avg_score ?? 0),
+      n: Number(x.n ?? 0),
+    })) as CriteriaBreakdownRow[];
+
+    // Orden estable: por nombre
+    rows.sort((a, b) => {
+      const la = (a.name_es || a.name_en || "").toLocaleLowerCase("es-ES");
+      const lb = (b.name_es || b.name_en || "").toLocaleLowerCase("es-ES");
+      return la.localeCompare(lb, "es-ES");
+    });
+
+    setCriteriaBreakdown(rows);
+  } catch (e: any) {
+    setBreakdownErr(e?.message ?? String(e));
+    setCriteriaBreakdown([]);
+  } finally {
+    setBreakdownLoading(false);
+  }
+}, [id, breakdownLoading]);
+// </SECTION:LOAD_CRITERIA_BREAKDOWN>
+
+// <SECTION:LOAD_REVIEW_BREAKDOWN>
+const loadReviewBreakdown = useCallback(
+  async (ratingId: string) => {
+    if (!ratingId) return;
+    if (reviewBreakdownLoading[ratingId]) return;
+    if (reviewBreakdownData[ratingId]) return;
+
+    setReviewBreakdownLoading((m) => ({ ...m, [ratingId]: true }));
+    setReviewBreakdownErr((m) => ({ ...m, [ratingId]: null }));
 
     try {
       const r = await supabase
-        .from("vw_venue_criteria_breakdown")
-        .select("venue_id,product_type_id,criterion_id,code,name_es,name_en,avg_score,n")
-        .eq("venue_id", id)
-        .eq("product_type_id", ESMORZARET_PRODUCT_TYPE_ID);
+        .from("vw_rating_breakdown_current")
+        .select("rating_id,venue_id,product_type_id,criterion_id,code,name_es,name_en,sort_order,score")
+        .eq("rating_id", ratingId)
+        .order("sort_order", { ascending: true });
 
       if (r.error) {
-        setBreakdownErr(r.error.message);
-        setCriteriaBreakdown([]);
+        setReviewBreakdownErr((m) => ({ ...m, [ratingId]: r.error.message }));
+        setReviewBreakdownData((m) => ({ ...m, [ratingId]: [] }));
         return;
       }
 
       const rows = ((r.data ?? []) as any[]).map((x) => ({
+        rating_id: String(x.rating_id),
         venue_id: String(x.venue_id),
         product_type_id: String(x.product_type_id),
         criterion_id: String(x.criterion_id),
         code: x.code ?? null,
         name_es: x.name_es ?? null,
         name_en: x.name_en ?? null,
-        avg_score: Number(x.avg_score ?? 0),
-        n: Number(x.n ?? 0),
-      })) as CriteriaBreakdownRow[];
+        sort_order: x.sort_order != null ? Number(x.sort_order) : null,
+        score: Number(x.score ?? 0),
+      })) as RatingBreakdownRow[];
 
-      // Orden estable: por nombre
       rows.sort((a, b) => {
+        const sa = a.sort_order ?? 9999;
+        const sb = b.sort_order ?? 9999;
+        if (sa !== sb) return sa - sb;
         const la = (a.name_es || a.name_en || "").toLocaleLowerCase("es-ES");
         const lb = (b.name_es || b.name_en || "").toLocaleLowerCase("es-ES");
         return la.localeCompare(lb, "es-ES");
       });
 
-      setCriteriaBreakdown(rows);
+      setReviewBreakdownData((m) => ({ ...m, [ratingId]: rows }));
     } catch (e: any) {
-      setBreakdownErr(e?.message ?? String(e));
-      setCriteriaBreakdown([]);
+      setReviewBreakdownErr((m) => ({ ...m, [ratingId]: e?.message ?? String(e) }));
+      setReviewBreakdownData((m) => ({ ...m, [ratingId]: [] }));
     } finally {
-      setBreakdownLoading(false);
+      setReviewBreakdownLoading((m) => ({ ...m, [ratingId]: false }));
     }
-  }, [id, breakdownLoading]);
-  // </SECTION:LOAD_CRITERIA_BREAKDOWN>
-
-  // <SECTION:LOAD_REVIEW_BREAKDOWN>
-  const loadReviewBreakdown = useCallback(
-    async (ratingId: string) => {
-      if (!ratingId) return;
-      if (reviewBreakdownLoading[ratingId]) return;
-      if (reviewBreakdownData[ratingId]) return;
-
-      setReviewBreakdownLoading((m) => ({ ...m, [ratingId]: true }));
-      setReviewBreakdownErr((m) => ({ ...m, [ratingId]: null }));
-
-      try {
-        const r = await supabase
-          .from("vw_rating_breakdown")
-          .select("rating_id,venue_id,product_type_id,criterion_id,code,name_es,name_en,sort_order,score")
-          .eq("rating_id", ratingId)
-          .order("sort_order", { ascending: true });
-
-        if (r.error) {
-          setReviewBreakdownErr((m) => ({ ...m, [ratingId]: r.error.message }));
-          setReviewBreakdownData((m) => ({ ...m, [ratingId]: [] }));
-          return;
-        }
-
-        const rows = ((r.data ?? []) as any[]).map((x) => ({
-          rating_id: String(x.rating_id),
-          venue_id: String(x.venue_id),
-          product_type_id: String(x.product_type_id),
-          criterion_id: String(x.criterion_id),
-          code: x.code ?? null,
-          name_es: x.name_es ?? null,
-          name_en: x.name_en ?? null,
-          sort_order: x.sort_order != null ? Number(x.sort_order) : null,
-          score: Number(x.score ?? 0),
-        })) as RatingBreakdownRow[];
-
-        rows.sort((a, b) => {
-          const sa = a.sort_order ?? 9999;
-          const sb = b.sort_order ?? 9999;
-          if (sa !== sb) return sa - sb;
-          const la = (a.name_es || a.name_en || "").toLocaleLowerCase("es-ES");
-          const lb = (b.name_es || b.name_en || "").toLocaleLowerCase("es-ES");
-          return la.localeCompare(lb, "es-ES");
-        });
-
-        setReviewBreakdownData((m) => ({ ...m, [ratingId]: rows }));
-      } catch (e: any) {
-        setReviewBreakdownErr((m) => ({ ...m, [ratingId]: e?.message ?? String(e) }));
-        setReviewBreakdownData((m) => ({ ...m, [ratingId]: [] }));
-      } finally {
-        setReviewBreakdownLoading((m) => ({ ...m, [ratingId]: false }));
-      }
-    },
-    [reviewBreakdownLoading, reviewBreakdownData]
-  );
-  // </SECTION:LOAD_REVIEW_BREAKDOWN>
+  },
+  [reviewBreakdownLoading, reviewBreakdownData]
+);
+// </SECTION:LOAD_REVIEW_BREAKDOWN>
 
   // <SECTION:EFFECTS_FOCUS_AND_COVER>
   useFocusEffect(

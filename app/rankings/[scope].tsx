@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SafeAreaView, ScrollView, View, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -13,6 +13,17 @@ import { RatingRing } from "../../src/ui/RatingRing";
 
 const BRAND_A = require("../../assets/branding/logo-a.png");
 
+// <SECTION:UI_STRINGS>
+const UI = {
+  tagMonth: "Ranking - Mes",
+  tagAll: "Ranking - Siempre",
+  labelMonth: "Mes natural",
+  labelAll: "Historico",
+  ellipsis: "...",
+  dash: "—",
+};
+// </SECTION:UI_STRINGS>
+
 type RankRow = {
   venue_id: string;
   name: string;
@@ -22,9 +33,9 @@ type RankRow = {
 };
 
 function reviewsLabel(n: number) {
-  if (!n || n <= 0) return "Sin rese\u00f1as";
-  if (n === 1) return "1 rese\u00f1a";
-  return `${n} rese\u00f1as`;
+  if (!n || n <= 0) return "Sin resenas";
+  if (n === 1) return "1 resena";
+  return `${n} resenas`;
 }
 
 function monthRangeISO() {
@@ -53,7 +64,7 @@ export default function RankingsScreen() {
         setError(null);
 
         if (isMonth) {
-          // âœ… MISMA definiciÃ³n que Home: mes natural (media simple) usando vw_rating_overall
+          // ✅ Misma definicion que Home (si sigues con mes natural): media simple en el rango del mes
           const { startISO, endISO } = monthRangeISO();
 
           const r = await supabase
@@ -97,17 +108,17 @@ export default function RankingsScreen() {
           const finalRows: RankRow[] = computed
             .map((x) => ({
               venue_id: x.venue_id,
-              name: venues.get(x.venue_id)?.name ?? "â€”",
+              name: venues.get(x.venue_id)?.name ?? UI.dash,
               city: venues.get(x.venue_id)?.city ?? "",
               score: x.score,
               n: x.n,
             }))
-            .filter((x) => x.name !== "â€”");
+            .filter((x) => x.name !== UI.dash);
 
           if (!alive) return;
           setRows(finalRows);
         } else {
-          // âœ… All-time bayesiano (como Home)
+          // ✅ All-time bayesiano (como Home)
           const all = await supabase
             .from("vw_venue_rank_all_time")
             .select("venue_id,name,city,bayes_score,ratings_count")
@@ -145,12 +156,10 @@ export default function RankingsScreen() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return rows;
-    return rows.filter(
-      (r) => (r.name ?? "").toLowerCase().includes(s) || (r.city ?? "").toLowerCase().includes(s)
-    );
+    return rows.filter((r) => (r.name ?? "").toLowerCase().includes(s) || (r.city ?? "").toLowerCase().includes(s));
   }, [rows, q]);
 
-  // âœ… ranking real (posiciÃ³n global), aunque filtres
+  // ✅ ranking real (posicion global), aunque filtres
   const rankByVenueId = useMemo(() => {
     const m = new Map<string, number>();
     rows.forEach((r, idx) => m.set(r.venue_id, idx + 1));
@@ -166,7 +175,7 @@ export default function RankingsScreen() {
         <BrandLockup
           title="Advisoret"
           iconSource={BRAND_A}
-          tag={isMonth ? "Ranking Â· Mes" : "Ranking Â· Siempre"}
+          tag={isMonth ? UI.tagMonth : UI.tagAll}
           style={{ marginBottom: theme.spacing.lg + 6 }}
         />
 
@@ -199,7 +208,7 @@ export default function RankingsScreen() {
             >
               <TText size={12} weight="800" caps style={{ color: theme.colors.gold }}>
                 {loading
-                  ? "â€¦"
+                  ? UI.ellipsis
                   : isFiltering
                     ? `Mostrando ${filtered.length} de ${rows.length}`
                     : `${rows.length} ${rows.length === 1 ? "local" : "locales"}`}
@@ -207,7 +216,7 @@ export default function RankingsScreen() {
             </View>
 
             <TText muted style={{ marginLeft: 8 }}>
-              {isMonth ? "Mes natural" : "HistÃ³rico"}
+              {isMonth ? UI.labelMonth : UI.labelAll}
             </TText>
           </View>
         </View>
@@ -233,17 +242,13 @@ export default function RankingsScreen() {
 
         {loading ? (
           <TCard>
-            <TText weight="800">Cargandoâ€¦</TText>
-            <TText muted style={{ marginTop: 6 }}>
-              Preparando rankings.
-            </TText>
+            <TText weight="800">Cargando{UI.ellipsis}</TText>
+            <TText muted style={{ marginTop: 6 }}>Preparando rankings.</TText>
           </TCard>
         ) : filtered.length === 0 ? (
           <TCard>
             <TText weight="800">Sin resultados</TText>
-            <TText muted style={{ marginTop: 6 }}>
-              Prueba con otro nombre o ciudad.
-            </TText>
+            <TText muted style={{ marginTop: 6 }}>Prueba con otro nombre o ciudad.</TText>
           </TCard>
         ) : (
           <View>
@@ -267,9 +272,7 @@ export default function RankingsScreen() {
                           {r.city}
                         </TText>
 
-                        <TText muted style={{ marginTop: 8 }}>
-                          {reviewsLabel(r.n)}
-                        </TText>
+                        <TText muted style={{ marginTop: 8 }}>{reviewsLabel(r.n)}</TText>
                       </View>
 
                       {r.n > 0 ? (
@@ -311,4 +314,3 @@ export default function RankingsScreen() {
     </SafeAreaView>
   );
 }
-
