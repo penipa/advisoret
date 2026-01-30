@@ -72,7 +72,11 @@ type NewVenue = {
   created_at?: string | null;
   avg_score?: number | null;
   ratings_count?: number | null;
+
+  featured_label?: string | null;
+  label?: string | null;
 };
+
 
 type NearVenue = {
   id: string;
@@ -303,7 +307,7 @@ function VenueThumb({
         overflow: "hidden",
         borderWidth: 1,
         borderColor: theme.colors.border,
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -325,14 +329,37 @@ function NewVenueCard({
   v,
   cacheBust,
   onPress,
+  badgeText,
 }: {
   v: NewVenue;
   cacheBust: number;
   onPress: () => void;
+  badgeText?: string | null;
 }) {
   const url = venueCoverUrl(v.cover_photo_path ?? null, cacheBust);
   const score = Number(v.avg_score ?? 0);
   const n = Number(v.ratings_count ?? 0);
+  const showBadge = typeof badgeText === "string" && badgeText.trim().length > 0;
+  const badge = showBadge ? badgeText!.trim() : "";
+
+  const Pill = ({ text }: { text: string }) => (
+    <View
+      style={{
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        minWidth: 62,
+        alignItems: "center",
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: "rgba(201,163,92,0.25)",
+        backgroundColor: "rgba(201,163,92,0.08)",
+      }}
+    >
+      <TText size={12} weight="800" caps style={{ color: theme.colors.gold }}>
+        {text}
+      </TText>
+    </View>
+  );
 
   return (
     <Pressable onPress={onPress}>
@@ -344,7 +371,7 @@ function NewVenueCard({
             style={{
               width: "100%",
               height: 140,
-              backgroundColor: theme.colors.surface2,
+              backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
               borderBottomWidth: 1,
               borderBottomColor: theme.colors.border,
               alignItems: "center",
@@ -371,6 +398,8 @@ function NewVenueCard({
                 valueDecimals={1}
                 valueColor="#C9A35C"
               />
+            ) : showBadge ? (
+              <Pill text={badge} />
             ) : (
               <View
                 style={{
@@ -381,7 +410,7 @@ function NewVenueCard({
                   borderRadius: 999,
                   borderWidth: 1,
                   borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface2,
+                  backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
                 }}
               >
                 <TText size={12} weight="800" style={{ color: theme.colors.text }}>
@@ -391,18 +420,40 @@ function NewVenueCard({
             )}
           </View>
 
-          <TText muted style={{ marginTop: 6 }} numberOfLines={2}>
+          <View
+            style={{
+              marginTop: 6,
+              minHeight: 26, // ✅ reserva 1 línea de pill SIEMPRE (evita saltos de altura)
+              alignSelf: "flex-start",
+              opacity: showBadge && n > 0 ? 1 : 0, // ✅ ocupa espacio aunque no se vea
+            }}
+          >
+            <Pill text={badge} />
+          </View>
+
+          <TText
+            muted
+            numberOfLines={2}
+            style={{
+              marginTop: 6,
+              lineHeight: 18,
+              minHeight: 18 * 2, // ✅ reserva siempre 2 líneas
+            }}
+          >
             {v.city}
             {v.address_text ? " · " + v.address_text : ""}
           </TText>
 
-          <TText muted style={{ marginTop: 10 }}>{reviewsLabel(n)}</TText>
+          <TText muted style={{ marginTop: 10 }}>
+            {reviewsLabel(n)}
+          </TText>
+
           <TText
             muted
             size={12}
             style={{
               marginTop: 6,
-              opacity: n <= 0 ? 1 : 0, // ✅ reserva espacio: altura constante en el carrusel
+              opacity: n <= 0 ? 1 : 0, // ✅ reserva espacio
             }}
             numberOfLines={1}
           >
@@ -413,6 +464,7 @@ function NewVenueCard({
     </Pressable>
   );
 }
+
 
 function NearVenueCard({
   v,
@@ -437,7 +489,7 @@ function NearVenueCard({
             style={{
               width: "100%",
               height: 140,
-              backgroundColor: theme.colors.surface2,
+              backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
               borderBottomWidth: 1,
               borderBottomColor: theme.colors.border,
               alignItems: "center",
@@ -474,7 +526,7 @@ function NearVenueCard({
                   borderRadius: 999,
                   borderWidth: 1,
                   borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface2,
+                  backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
                 }}
               >
                 <TText size={12} weight="800" style={{ color: theme.colors.text }}>
@@ -484,18 +536,28 @@ function NearVenueCard({
             )}
           </View>
 
-          <TText muted style={{ marginTop: 6 }} numberOfLines={2}>
+          <TText
+            muted
+            numberOfLines={2}
+            style={{
+              marginTop: 6,
+              lineHeight: 18,
+              minHeight: 18 * 2, // ✅ reserva siempre 2 líneas
+            }}
+          >
             {fmtKm(v.distance_km) + " · " + v.city}
             {v.address_text ? " · " + v.address_text : ""}
           </TText>
 
-          <TText muted style={{ marginTop: 10 }}>{reviewsLabel(n)}</TText>
+          <TText muted style={{ marginTop: 10 }}>
+            {reviewsLabel(n)}
+          </TText>
           <TText
             muted
             size={12}
             style={{
               marginTop: 6,
-              opacity: n <= 0 ? 1 : 0, // ✅ reserva espacio: altura constante en el carrusel
+              opacity: n <= 0 ? 1 : 0,
             }}
             numberOfLines={1}
           >
@@ -507,6 +569,8 @@ function NearVenueCard({
   );
 }
 // </SECTION:UI_COMPONENTS>
+
+
 
 // <SECTION:HELPERS_GEO>
 // Haversine (distancia en km)
@@ -559,15 +623,21 @@ const ESMORZARET_PRODUCT_TYPE_ID = "5b0af5a5-e73a-4381-9796-c6676c285206";
   const [meId, setMeId] = useState<string | null>(null);
   // </SECTION:STATE_EXPLORE>
 
-  // <SECTION:STATE_PREMIUM_CONTENT>
-  // Premium default content
-  const [newRows, setNewRows] = useState<NewVenue[]>([]);
-  const [newLoading, setNewLoading] = useState(false);
+// <SECTION:STATE_PREMIUM_CONTENT>
+// Premium default content
 
-  const [nearRows, setNearRows] = useState<NearVenue[]>([]);
-  const [nearLoading, setNearLoading] = useState(false);
-  const [locDenied, setLocDenied] = useState(false);
-  // </SECTION:STATE_PREMIUM_CONTENT>
+// ✅ Destacados (editorial/patrocinado)
+const [featuredRows, setFeaturedRows] = useState<NewVenue[]>([]);
+const [featuredLoading, setFeaturedLoading] = useState(false);
+
+const [newRows, setNewRows] = useState<NewVenue[]>([]);
+const [newLoading, setNewLoading] = useState(false);
+
+const [nearRows, setNearRows] = useState<NearVenue[]>([]);
+const [nearLoading, setNearLoading] = useState(false);
+const [locDenied, setLocDenied] = useState(false);
+// </SECTION:STATE_PREMIUM_CONTENT>
+
 
   // <SECTION:STATE_UI_MISC>
   // bust para imágenes (anti-cache)
@@ -595,8 +665,7 @@ const ESMORZARET_PRODUCT_TYPE_ID = "5b0af5a5-e73a-4381-9796-c6676c285206";
 
 // <SECTION:LOADERS_RANKINGS>
 const loadAllTime = async () => {
-  // Ordenamos con bayes_score (estable con pocas reseñas),
-  // pero mostramos avg_score (media real) para evitar incongruencias tipo “tengo 1 reseña y sale otro número”.
+  // Orden estable con bayes_score, mostramos avg_score
   const all = await supabase
     .from("vw_venue_stats_all_time_current")
     .select("venue_id,name,city,bayes_score,avg_score,ratings_count")
@@ -619,9 +688,7 @@ async function loadMonthNatural() {
   if (r.error) throw new Error(r.error.message);
 
   const rows = (r.data ?? []) as any[];
-  
 
-  // Reusamos MonthRow para render existente
   const mapped: MonthRow[] = rows.map((x) => ({
     venue_id: String(x.venue_id),
     name: String(x.name ?? "—"),
@@ -663,57 +730,147 @@ const loadRankings = async () => {
 };
 // </SECTION:LOADERS_RANKINGS>
 
-  // <SECTION:LOADERS_NEW>
-  const loadNew = async () => {
-    setNewLoading(true);
-    try {
-      const res = await supabase
-        .from("venues")
-        .select("id,name,city,address_text,cover_photo_path,created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
 
-      if (res.error) throw new Error(res.error.message);
+// <SECTION:LOADERS_FEATURED>
+const loadFeatured = async () => {
+  setFeaturedLoading(true);
+  try {
+    const fv = await supabase
+      .from("featured_venues")
+      .select("venue_id,priority,start_at,label")
+      .order("priority", { ascending: false })
+      .order("start_at", { ascending: false })
+      .limit(2);
 
-      const base = (res.data ?? []) as NewVenue[];
-      if (base.length === 0) {
-        setNewRows([]);
-        return;
-      }
+    if (fv.error) throw new Error(fv.error.message);
 
-      const ids = base.map((x) => x.id);
-      const rr = await supabase
-        .from("vw_venue_stats_all_time_current")
-        .select("venue_id,avg_score,ratings_count")
-        .in("venue_id", ids);
+    const featured = (fv.data ?? []) as any[];
+    const ids = featured.map((x) => String(x.venue_id)).filter(Boolean);
 
-      const rankMap = new Map<string, { avg_score: number; ratings_count: number }>();
-      if (!rr.error) {
-        for (const row of (rr.data ?? []) as any[]) {
-          rankMap.set(row.venue_id, {
-            avg_score: Number(row.avg_score ?? 0),
-            ratings_count: Number(row.ratings_count ?? 0),
-          });
-        }
-      }
-
-      const enriched = base.map((v) => {
-        const r = rankMap.get(v.id);
-        return {
-          ...v,
-          avg_score: r?.avg_score ?? 0,
-          ratings_count: r?.ratings_count ?? 0,
-        };
-      });
-
-      setNewRows(enriched);
-    } catch {
-      setNewRows([]);
-    } finally {
-      setNewLoading(false);
+    if (ids.length === 0) {
+      setFeaturedRows([]);
+      return;
     }
-  };
-  // </SECTION:LOADERS_NEW>
+
+    const labelById = new Map<string, string | null>();
+    for (const x of featured) {
+      const id = String(x.venue_id);
+      const label = typeof x.label === "string" ? x.label : null;
+      if (id) labelById.set(id, label);
+    }
+
+    const v = await supabase
+      .from("venues")
+      .select("id,name,city,address_text,cover_photo_path,created_at")
+      .in("id", ids);
+
+    if (v.error) throw new Error(v.error.message);
+
+    const venueMap = new Map<string, any>();
+    for (const row of (v.data ?? []) as any[]) {
+      venueMap.set(String(row.id), row);
+    }
+
+    const rr = await supabase
+      .from("vw_venue_stats_all_time_current")
+      .select("venue_id,avg_score,ratings_count")
+      .in("venue_id", ids);
+
+    const statMap = new Map<string, { avg_score: number; ratings_count: number }>();
+    if (!rr.error) {
+      for (const row of (rr.data ?? []) as any[]) {
+        statMap.set(String(row.venue_id), {
+          avg_score: Number(row.avg_score ?? 0),
+          ratings_count: Number(row.ratings_count ?? 0),
+        });
+      }
+    }
+
+    const finalRows: NewVenue[] = ids
+      .map((id) => {
+        const vv = venueMap.get(id);
+        if (!vv) return null;
+
+        const st = statMap.get(id);
+        return {
+          id: String(vv.id),
+          name: String(vv.name ?? "—"),
+          city: String(vv.city ?? ""),
+          address_text: vv.address_text ?? null,
+          cover_photo_path: vv.cover_photo_path ?? null,
+          created_at: vv.created_at ?? null,
+          avg_score: st?.avg_score ?? 0,
+          ratings_count: st?.ratings_count ?? 0,
+          featured_label: null,
+          label: labelById.get(id) ?? null,
+        } as NewVenue;
+      })
+      .filter(Boolean) as NewVenue[];
+
+    setFeaturedRows(finalRows);
+  } catch (e: any) {
+    setFeaturedRows([]);
+    setError(e?.message ?? String(e));
+  } finally {
+    setFeaturedLoading(false);
+  }
+};
+// </SECTION:LOADERS_FEATURED>
+
+
+// <SECTION:LOADERS_NEW>
+const loadNew = async () => {
+  setNewLoading(true);
+  try {
+    const res = await supabase
+      .from("venues")
+      .select("id,name,city,address_text,cover_photo_path,created_at")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (res.error) throw new Error(res.error.message);
+
+    const base = (res.data ?? []) as NewVenue[];
+    if (base.length === 0) {
+      setNewRows([]);
+      return;
+    }
+
+    const ids = base.map((x) => x.id);
+
+    const rr = await supabase
+      .from("vw_venue_stats_all_time_current")
+      .select("venue_id,avg_score,ratings_count")
+      .in("venue_id", ids);
+
+    const rankMap = new Map<string, { avg_score: number; ratings_count: number }>();
+    if (!rr.error) {
+      for (const row of (rr.data ?? []) as any[]) {
+        rankMap.set(String(row.venue_id), {
+          avg_score: Number(row.avg_score ?? 0),
+          ratings_count: Number(row.ratings_count ?? 0),
+        });
+      }
+    }
+
+    const enriched = base.map((v) => {
+      const r = rankMap.get(v.id);
+      return {
+        ...v,
+        avg_score: r?.avg_score ?? 0,
+        ratings_count: r?.ratings_count ?? 0,
+      };
+    });
+
+    setNewRows(enriched);
+  } catch {
+    setNewRows([]);
+  } finally {
+    setNewLoading(false);
+  }
+};
+// </SECTION:LOADERS_NEW>
+
 
   // <SECTION:LOADERS_NEAR>
   const requestAndLoadNear = async () => {
@@ -931,21 +1088,22 @@ const loadRankings = async () => {
   }, [selectedCity]);
   // </SECTION:EXPLORE_LOGIC>
 
-  // <SECTION:FOCUS_EFFECT>
-  useFocusEffect(
-    useCallback(() => {
-      setCoverBust(Date.now());
-      loadRankings().catch((e: any) => setError(e?.message ?? String(e)));
-      void loadExplore();
-      void loadNew();
+// <SECTION:FOCUS_EFFECT>
+useFocusEffect(
+  useCallback(() => {
+    setCoverBust(Date.now());
 
-      // ✅ solo intentamos “cerca de ti” cuando NO estás explorando
-      if (!shouldShowExplore) {
-        void requestAndLoadNear();
-      }
-    }, [loadExplore, shouldShowExplore])
-  );
-  // </SECTION:FOCUS_EFFECT>
+    loadRankings().catch((e: any) => setError(e?.message ?? String(e)));
+    void loadExplore();
+    void loadFeatured(); // ✅ destacados
+    void loadNew();
+
+    if (!shouldShowExplore) {
+      void requestAndLoadNear();
+    }
+  }, [loadExplore, shouldShowExplore])
+);
+// </SECTION:FOCUS_EFFECT>
 
 // <SECTION:RENDER>
 return (
@@ -975,83 +1133,126 @@ return (
         </TText>
       )}
 
-      {/* Rankings primero */}
-      {monthRows.length >= 2 ? (
+      {/* Premium default content */}
+      {!shouldShowExplore ? (
         <>
+          {/* Destacados (editorial / patrocinado) */}
+          <View style={{ marginBottom: theme.spacing.lg }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <TText size={theme.font.h2} weight="700">
+                Destacados
+              </TText>
+            </View>
+
+            {featuredLoading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                <SkeletonWideCard />
+                <SkeletonWideCard />
+              </ScrollView>
+            ) : featuredRows.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                {featuredRows.map((v) => (
+                  <NewVenueCard
+                    key={v.id}
+                    v={v}
+                    cacheBust={coverBust}
+                    onPress={() => goVenue(v.id)}
+                    badgeText={
+                      typeof (v as any)?.featured_label === "string"
+                        ? (v as any).featured_label
+                        : typeof (v as any)?.label === "string"
+                          ? (v as any).label
+                          : null
+                    }
+                  />
+                ))}
+              </ScrollView>
+            ) : (
+              <TText muted style={{ marginTop: 10 }}>
+                Aún no hay destacados activos.
+              </TText>
+            )}
+          </View>
+
+          {/* Rankings */}
+          {monthRows.length >= 2 ? (
+            <>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <TText size={theme.font.h2} weight="700">
+                  Mejor del mes pasado
+                </TText>
+                <TButton
+                  title="Ver todos"
+                  variant="ghost"
+                  style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
+                  onPress={() => router.push("/rankings/month")}
+                />
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
+                {rankLoading && monthRows.length === 0 ? (
+                  <>
+                    <SkeletonRankCard />
+                    <SkeletonRankCard />
+                  </>
+                ) : null}
+                {monthRows.map((r) => (
+                  <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
+                    <RankCard
+                      title={r.name}
+                      subtitle={
+                        (r.city ?? "") +
+                        " · Mes pasado " +
+                        Number(r.score_month ?? 0).toFixed(1) +
+                        " (" +
+                        Number(r.ratings_count_month ?? 0) +
+                        ")"
+                      }
+                      score={Number(r.avg_score ?? 0)}
+                      n={Number(r.ratings_count ?? 0)}
+                      badge="MES"
+                    />
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
+            </>
+          ) : null}
+
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <TText size={theme.font.h2} weight="700">
-              Mejor del mes pasado
+              Mejores de siempre
             </TText>
             <TButton
               title="Ver todos"
               variant="ghost"
               style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
-              onPress={() => router.push("/rankings/month")}
+              onPress={() => router.push("/rankings/all")}
             />
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-            {rankLoading && monthRows.length === 0 ? (
+            {rankLoading && allRows.length === 0 ? (
               <>
                 <SkeletonRankCard />
                 <SkeletonRankCard />
               </>
             ) : null}
-            {monthRows.map((r) => (
+            {allRows.map((r) => (
               <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
                 <RankCard
                   title={r.name}
-                  subtitle={
-                    (r.city ?? "") +
-                    " · Mes pasado " +
-                    Number(r.score_month ?? 0).toFixed(1) +
-                    " (" +
-                    Number(r.ratings_count_month ?? 0) +
-                    ")"
-                  }
+                  subtitle={r.city}
                   score={Number(r.avg_score ?? 0)}
                   n={Number(r.ratings_count ?? 0)}
-                  badge="MES"
                 />
               </Pressable>
             ))}
           </ScrollView>
 
           <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
-        </>
-      ) : null}
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <TText size={theme.font.h2} weight="700">
-          Mejores de siempre
-        </TText>
-        <TButton
-          title="Ver todos"
-          variant="ghost"
-          style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
-          onPress={() => router.push("/rankings/all")}
-        />
-      </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
-        {rankLoading && allRows.length === 0 ? (
-          <>
-            <SkeletonRankCard />
-            <SkeletonRankCard />
-          </>
-        ) : null}
-        {allRows.map((r) => (
-          <Pressable key={r.venue_id} onPress={() => goVenue(r.venue_id)}>
-            <RankCard title={r.name} subtitle={r.city} score={Number(r.avg_score ?? 0)} n={Number(r.ratings_count ?? 0)} />
-          </Pressable>
-        ))}
-      </ScrollView>
-
-      <View style={{ height: theme.spacing.lg + theme.spacing.sm }} />
-
-      {/* Premium default content */}
-      {!shouldShowExplore ? (
-        <>
           {/* Cerca de ti */}
           <View style={{ marginBottom: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -1168,9 +1369,7 @@ return (
             </ScrollView>
           ) : null}
 
-          {chip === "city" && !selectedCity ? (
-            <TText muted style={{ marginTop: 8 }}>Elige una localidad para filtrar.</TText>
-          ) : null}
+          {chip === "city" && !selectedCity ? <TText muted style={{ marginTop: 8 }}>Elige una localidad para filtrar.</TText> : null}
 
           {exploreLoading ? (
             <View style={{ marginTop: 10 }}>
@@ -1209,14 +1408,13 @@ return (
             </View>
           ) : null}
 
-          {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? (
-            <TText muted style={{ marginTop: 10 }}>Sin resultados.</TText>
-          ) : null}
+          {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? <TText muted style={{ marginTop: 10 }}>Sin resultados.</TText> : null}
         </View>
       ) : null}
     </ScrollView>
   </SafeAreaView>
 );
 // </SECTION:RENDER>
+
 }
 // </SECTION:SCREEN>
