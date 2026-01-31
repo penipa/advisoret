@@ -51,6 +51,23 @@ export default function SuggestVenueScreen() {
   }, [name, city, mapsUrl, saving]);
   // </SECTION:DERIVED>
 
+  const inputStyle = useMemo(
+    () => ({
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginTop: 6,
+      color: theme.colors.text,
+      fontSize: 16,
+    }),
+    []
+  );
+
+  const placeholderColor = theme.colors.textMuted;
+  const cursorColor = theme.colors.primary;
+
   // <SECTION:SUBMIT>
   const submit = async () => {
     setError(null);
@@ -118,15 +135,10 @@ export default function SuggestVenueScreen() {
               value={name}
               onChangeText={setName}
               placeholder="Ej: Bar Manolo"
-              placeholderTextColor="#999"
-              style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                marginTop: 6,
-              }}
+              placeholderTextColor={placeholderColor}
+              style={inputStyle}
+              selectionColor={cursorColor}
+              cursorColor={cursorColor}
             />
 
             <View style={{ height: 12 }} />
@@ -138,15 +150,10 @@ export default function SuggestVenueScreen() {
               value={city}
               onChangeText={setCity}
               placeholder="Ej: Valencia"
-              placeholderTextColor="#999"
-              style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                marginTop: 6,
-              }}
+              placeholderTextColor={placeholderColor}
+              style={inputStyle}
+              selectionColor={cursorColor}
+              cursorColor={cursorColor}
             />
 
             <View style={{ height: 12 }} />
@@ -158,15 +165,10 @@ export default function SuggestVenueScreen() {
               value={addressText}
               onChangeText={setAddressText}
               placeholder="Calle, número…"
-              placeholderTextColor="#999"
-              style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                marginTop: 6,
-              }}
+              placeholderTextColor={placeholderColor}
+              style={inputStyle}
+              selectionColor={cursorColor}
+              cursorColor={cursorColor}
             />
 
             <View style={{ height: 12 }} />
@@ -178,17 +180,12 @@ export default function SuggestVenueScreen() {
               value={mapsUrl}
               onChangeText={setMapsUrl}
               placeholder="https://maps.app.goo.gl/…"
-              placeholderTextColor="#999"
+              placeholderTextColor={placeholderColor}
               autoCapitalize="none"
               autoCorrect={false}
-              style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                marginTop: 6,
-              }}
+              style={inputStyle}
+              selectionColor={cursorColor}
+              cursorColor={cursorColor}
             />
 
             <View style={{ height: 12 }} />
@@ -200,18 +197,15 @@ export default function SuggestVenueScreen() {
               value={notes}
               onChangeText={setNotes}
               placeholder="Ej: mejor bocadillo de…"
-              placeholderTextColor="#999"
+              placeholderTextColor={placeholderColor}
               multiline
               style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                marginTop: 6,
+                ...inputStyle,
                 minHeight: 90,
                 textAlignVertical: "top",
               }}
+              selectionColor={cursorColor}
+              cursorColor={cursorColor}
             />
 
             {error ? (
