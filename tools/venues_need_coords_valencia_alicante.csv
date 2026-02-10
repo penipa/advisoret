@@ -1,0 +1,21 @@
+venue_id,name,city,address_text,google_maps_url
+5290bc8c-5b07-4b1c-8453-16b50a72f612,El Ferrao,Alicante,null,https://www.google.com/maps/search/?api=1&query=El%20Ferrao%2C%20Alacant/Alicante%2C%20Alicante%2C%20Comunitat%20Valenciana
+f8137a1f-21b8-4c10-bab5-29f0d92c5052,Bar Cassalla,Valencia,null,https://www.google.com/maps/search/?api=1&query=Bar%20Cassalla%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+7a803ac5-0faf-4f00-a22f-b8007e3203f9,Bar Cremaet,Valencia,null,https://www.google.com/maps/search/?api=1&query=Bar%20Cremaet%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+20dc03ee-d25c-4723-8a91-3cd6d4aeec40,Bar Mistela,Valencia,null,https://www.google.com/maps/search/?api=1&query=Bar%20Mistela%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+bfce14b1-3c45-4dfa-8498-7be0af12b2b9,Bodega Bar J. Flor,Valencia,null,https://www.google.com/maps/search/?api=1&query=Bodega%20Bar%20J.%20Flor%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+25373c1c-b4aa-4b74-8f9a-d497285ceeee,Cafetería Restaurante Beluga,Valencia,null,https://www.google.com/maps/search/?api=1&query=Cafeter%C3%ADa%20Restaurante%20Beluga%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+1ebca243-cc2c-4bf9-8ebd-701d7378da5b,Cafetería Restaurante Pitti,Valencia,null,https://www.google.com/maps/search/?api=1&query=Cafeter%C3%ADa%20Restaurante%20Pitti%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+1a38588c-86cc-40be-a071-c4b9fded8a88,Casa Baldo 1915,Valencia,null,https://www.google.com/maps/search/?api=1&query=Casa%20Baldo%201915%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+a5fc0f24-ea2e-45a4-9638-786dd14b546b,Central Bar by Ricard Camarena,Valencia,null,https://www.google.com/maps/search/?api=1&query=Central%20Bar%20by%20Ricard%20Camarena%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+ac2b6fc9-c1d4-4013-b2ba-36988117164a,El Baret de Javi,Valencia,null,https://www.google.com/maps/search/?api=1&query=El%20Baret%20de%20Javi%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+654f0b1a-f24a-4b06-bd0a-310fcedae171,El Trinquet de Pelayo,Valencia,null,https://www.google.com/maps/search/?api=1&query=El%20Trinquet%20de%20Pelayo%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+b9e54a2f-6aee-43d2-9c35-deb8497975ac,El Trocito del Medio,Valencia,null,https://www.google.com/maps/search/?api=1&query=El%20Trocito%20del%20Medio%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+cafc4e10-c2a4-4c00-9bd0-6e65159c893c,Grupo Gastroadictos (grupo),Valencia,null,https://www.google.com/maps/search/?api=1&query=Grupo%20Gastroadictos%20%28grupo%29%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+58609d4f-c7f6-494b-a1e2-4351e8c9989a,La Pérgola,Valencia,null,https://www.google.com/maps/search/?api=1&query=La%20P%C3%A9rgola%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+e0b0ae6d-68f9-438c-9cd9-18916d0d8e48,La Piulà,Valencia,null,https://www.google.com/maps/search/?api=1&query=La%20Piul%C3%A0%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+03a3425d-6945-4768-a5b7-52d9479078a4,Marvi,Valencia,null,https://www.google.com/maps/search/?api=1&query=Marvi%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+36721c29-beb8-42c9-8c1c-5d23b33306b1,Mesón Canela,Valencia,null,https://www.google.com/maps/search/?api=1&query=Mes%C3%B3n%20Canela%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a
+5443e1a4-c854-4d26-a2a6-baa8e5ac3875,Nuevo Oslo,Valencia,null,https://www.google.com/maps/search/?api=1&query=Nuevo%20Oslo%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+71c14599-f563-4ec3-91bc-2f940dc542e5,París - Los Isidros,Valencia,null,https://www.google.com/maps/search/?api=1&query=Par%C3%ADs%20-%20Los%20Isidros%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana
+697bbe35-e8f2-4172-99d0-b43865556e2f,Taberna Los Gómez,Valencia,null,https://www.google.com/maps/search/?api=1&query=Taberna%20Los%20G%C3%B3mez%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a

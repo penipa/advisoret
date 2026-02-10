@@ -1,0 +1,416 @@
+{
+  "common": {
+    "appName": "Advisoret",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "loading": "Cargando…",
+    "loadingDots": "Cargando...",
+    "reload": "Recargar",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "new": "NUEVO",
+    "goBack": "Volver"
+  },
+  "languages": {
+    "es": "Español",
+    "en": "English"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "explore": "Explorar",
+    "account": "Cuenta"
+  },
+  "modal": {
+    "title": "Este es un modal",
+    "goHome": "Ir al inicio"
+  },
+  "auth": {
+    "access": "Acceso",
+    "methodHelp": "Elige método: código por email o contraseña.",
+    "code": "Código",
+    "password": "Contraseña",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "sendCode": "Enviar código",
+    "sending": "Enviando…",
+    "enter": "Entrar",
+    "entering": "Entrando…",
+    "noteExpo": "Nota: en Expo Go, los magic links (deep links) dan guerra. Por eso el acceso por email lo hacemos con código.",
+    "pasteTitle": "Pegar enlace de acceso",
+    "pasteHelp": "Si el email no abre la app, copia el link del correo y pégalo aquí.",
+    "hideKeyboard": "Ocultar teclado",
+    "validateAndEnter": "Validar y entrar",
+    "validating": "Validando...",
+    "login": {
+      "passwordMethodTip": "Consejo: para TestFlight/App Review usa una cuenta demo con contraseña (la creas en Supabase).",
+      "otpHint": "Pega el código (6–8 dígitos). Si pides otro, solo vale el último.",
+      "alerts": {
+        "emailTitle": "Email",
+        "codeTitle": "Código",
+        "passwordTitle": "Contraseña",
+        "codeSentTitle": "Código enviado",
+        "codeSentMessage": "Revisa tu correo e introduce el código.",
+        "signInFailedTitle": "No se pudo entrar",
+        "invalidEmail": "Pon un email válido.",
+        "sameEmailRequired": "Pon el mismo email al que pediste el código.",
+        "pasteCodeHint": "Pega el código del correo (normalmente 6–8 dígitos).",
+        "sendCodeFailed": "No se pudo enviar el código.",
+        "invalidOrExpiredCode": "Código inválido o caducado. Si pediste otro código, solo vale el último.",
+        "passwordMinLength": "Pon tu contraseña (mínimo 6 caracteres).",
+        "invalidCredentials": "Email o contraseña incorrectos."
+      }
+    },
+    "paste": {
+      "linkLabel": "Enlace",
+      "linkPlaceholder": "Pega aquí el link completo del email…",
+      "success": {
+        "sessionStarted": "Sesión iniciada ✅"
+      },
+      "errors": {
+        "invalidUrl": "El texto pegado no parece una URL válida. Pega el link completo del email.",
+        "tokenMissing": "No encuentro 'token' en el enlace. Pega el link completo del email.",
+        "emailRequiredFallback": "No he podido validar el enlace directamente. Añade tu email arriba y vuelve a probar.",
+        "verifyFailed": "No he podido validar el enlace. ({{message}})"
+      }
+    }
+  },
+  "account": {
+    "title": "Cuenta",
+    "subtitle": "Cuenta",
+    "language": "Idioma",
+    "changeAccount": "Cambiar cuenta",
+    "logout": "Cerrar sesión",
+    "userFallback": "Usuario",
+    "okTitle": "OK",
+    "status": {
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "resolution": {
+      "reportApproved": "Aprobado.",
+      "reportRejected": "Rechazado.",
+      "proposalApproved": "Aprobada.",
+      "proposalRejected": "Rechazada.",
+      "proposalApprovedShort": "Aprobada."
+    },
+    "errors": {
+      "changeLanguage": "No se pudo cambiar el idioma.",
+      "changeAccount": "No se pudo cambiar de cuenta.",
+      "logout": "No se pudo cerrar sesión.",
+      "loadReports": "No se pudieron cargar los reportes.",
+      "loadAdminReports": "No se pudieron cargar los reportes (admin).",
+      "loadProposals": "No se pudieron cargar las propuestas.",
+      "loadAdminProposals": "No se pudieron cargar las propuestas (admin).",
+      "updateSuggestion": "No se pudo actualizar el reporte.",
+      "updateProposal": "No se pudo actualizar la propuesta."
+    },
+    "reviewSuggestion": {
+      "markedAs": "Marcado como {{status}}.",
+      "defaultNoteApproved": "Aprobado.",
+      "defaultNoteRejected": "Rechazado.",
+      "approveTitle": "Aprobar reporte",
+      "rejectTitle": "Rechazar reporte",
+      "resolutionNoteOptional": "Nota de resolución (opcional)."
+    },
+    "reviewProposal": {
+      "markedAs": "Marcado como {{status}}.",
+      "defaultNoteApproved": "Aprobada.",
+      "defaultNoteRejected": "Rechazada.",
+      "approveTitle": "Aprobar propuesta",
+      "rejectTitle": "Rechazar propuesta",
+      "resolutionNoteOptional": "Nota de resolución (opcional)."
+    },
+    "pendingReviews": "Revisiones pendientes",
+    "pendingReports": "{{count}} reportes",
+    "pendingProposals": "{{count}} altas",
+    "checkingSession": "Comprobando tu sesión.",
+    "notSignedIn": "No has iniciado sesión",
+    "signInHint": "Entra con tu email y un código de acceso.",
+    "signIn": "Iniciar sesión",
+    "loadingProfile": "Cargando perfil…",
+    "statusLabel": "Estado",
+    "connected": "Conectado",
+    "idLabel": "ID",
+    "myReports": "Mis reportes",
+    "expand": "Mostrar",
+    "collapse": "Ocultar",
+    "history": {
+      "view": "Ver historial ({{count}})",
+      "hide": "Ocultar"
+    },
+    "loadingReports": "Cargando reportes…",
+    "couldNotLoad": "No se pudieron cargar",
+    "noReportsYet": "Aún no has enviado reportes",
+    "noReportsHint": "Desde la ficha de un local puedes “Reportar datos incorrectos”.",
+    "reportFallback": "Reporte",
+    "moderation": "Moderación",
+    "pendingTab": "Pendientes",
+    "reviewedTab": "Revisados",
+    "noReportsInTray": "No hay reportes en esta bandeja.",
+    "venueWithId": "Local {{id}}",
+    "venueFallback": "Local —",
+    "open": "Abrir",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "myProposals": "Mis propuestas",
+    "loadingProposals": "Cargando propuestas…",
+    "noProposalsYet": "Aún no has enviado propuestas",
+    "noProposalsHint": "Desde “Proponer local” puedes sugerir un sitio que no esté en la base de datos.",
+    "proposalFallback": "Propuesta",
+    "moderationProposals": "Moderación · Altas",
+    "reviewedTabProposals": "Revisadas",
+    "noProposalsInTray": "No hay propuestas en esta bandeja.",
+    "changeAccountTip": "Consejo: si cambias de cuenta, volverás a la pantalla de acceso."
+  },
+  "explore": {
+    "title": "Explorar",
+    "back": "Volver",
+    "clear": "Limpiar",
+    "searchPlaceholder": "Buscar local, ciudad o dirección…",
+    "cityChip": "📍 Localidad",
+    "awarded": "🏆 Premiados",
+    "withoutAward": "Sin premio",
+    "noResults": "Sin resultados.",
+    "endResults": "Fin de resultados"
+  },
+  "home": {
+    "brandTitle": "Advisoret",
+    "brandSubtitle": "Esmorzaret - Valencian Brunch",
+    "proposeVenue": "+ Proponer local",
+    "featured": "Destacados",
+    "noFeaturedActive": "Aún no hay destacados activos.",
+    "bestLastMonth": "Mejor del mes pasado",
+    "viewAll": "Ver todos",
+    "monthPastSubtitle": "{{city}} · Mes pasado {{score}} ({{count}})",
+    "monthBadge": "MES",
+    "bestAllTime": "Mejores de siempre",
+    "nearYou": "Cerca de ti",
+    "refresh": "Actualizar",
+    "enableLocation": "Activa la ubicación para ver los locales cercanos.",
+    "noNearbyWithCoords": "No hay locales con coordenadas suficientes cerca (aún).",
+    "newPlaces": "Nuevos",
+    "noNewPlaces": "Aún no hay nuevos locales.",
+    "searchPlaceholder": "Buscar local, ciudad o dirección…",
+    "removeFilter": "Quitar filtro",
+    "chooseCityToFilter": "Elige una localidad para filtrar.",
+    "noResults": "Sin resultados.",
+    "beFirstToRate": "Sé el primero en valorar",
+    "nearbyAlertTitle": "Cerca de ti",
+    "nearbyLoadError": "No se pudo cargar la ubicación.",
+    "reviews": {
+      "none": "Sin reseñas",
+      "one": "1 reseña",
+      "many": "{{count}} reseñas"
+    },
+    "units": {
+      "m": "m",
+      "km": "km"
+    },
+    "chips": {
+      "all": "Todo",
+      "city": "📍 Localidad",
+      "following": "Siguiendo",
+      "mine": "Mis valoraciones"
+    }
+  },
+  "featured": {
+    "tags": {
+      "recommended": "RECOMENDADO",
+      "sponsored": "PATROCINADO"
+    }
+  },
+  "rate": {
+    "title": "Valorar",
+    "titleEdit": "Editar valoración",
+    "criteriaTitle": "Criterios",
+    "detailsTitle": "Detalles",
+    "priceLabel": "Precio (€)",
+    "pricePlaceholder": "8.50",
+    "commentLabel": "Comentario (opcional)",
+    "commentPlaceholder": "Qué has pedido, qué tal el cremaet…",
+    "range": "1–5",
+    "editModeHint": "Modo edición: cambia lo que quieras y guarda.",
+    "prefillEditingThisMonth": "Ya has valorado este local este mes. Estás editando tu valoración.",
+    "reviews": {
+      "one": "1 reseña",
+      "many": "{{count}} reseñas"
+    },
+    "errors": {
+      "loadYourRating": "No he podido cargar tu valoración.",
+      "loadYourScores": "No he podido cargar las puntuaciones de tu valoración.",
+      "priceRequired": "Indica el precio por persona (ej: 8.50).",
+      "priceInvalid": "El precio no parece un número válido. Ej: 8.50",
+      "noCriteriaLoaded": "No hay criterios cargados. Revisa rating_criteria."
+    },
+    "saved": {
+      "newPeriod": "Guardado ✅ (han pasado 30 días: nueva valoración creada)",
+      "updated": "Actualizado ✅",
+      "saved": "Guardado ✅ ¡Gracias!"
+    },
+    "cta": {
+      "preparingEdit": "Preparando edición...",
+      "saving": "Guardando...",
+      "saveChanges": "Guardar cambios",
+      "saveRating": "Guardar valoración"
+    }
+  },
+  "venue": {
+    "noVenueFound": "No se encontró el local.",
+    "unavailableTitle": "No disponible",
+    "noCoordsYet": "Este local aún no tiene coordenadas.",
+    "cannotOpenMaps": "No he podido abrir mapas en este dispositivo.",
+    "permissionRequiredTitle": "Permiso requerido",
+    "photoPermissionNeeded": "Necesito acceso a tus fotos para subir la portada.",
+    "base64ReadError": "No se pudo leer la imagen (base64 vacío).",
+    "emptyImageError": "Imagen vacía (0 bytes). No se sube.",
+    "locationPermissionNeeded": "Necesito permiso de localización.",
+    "okTitle": "OK",
+    "coordsUpdated": "Coordenadas actualizadas.",
+    "loginRequiredTitle": "Inicia sesión",
+    "loginRequiredToReport": "Necesitas iniciar sesión para reportar.",
+    "thanksTitle": "Gracias",
+    "reportSent": "Reporte enviado. Lo revisaremos pronto.",
+    "reportSendError": "No se pudo enviar el reporte.",
+    "cacauFallback": "Cacau d'Or",
+    "rateButton": "Valorar",
+    "imageLoadError": "Error cargando imagen",
+    "initialsFallback": "A",
+    "uploading": "Subiendo…",
+    "tapToUploadCover": "Toca para subir portada",
+    "locationTitle": "Ubicación",
+    "openInMaps": "Abrir en mapas",
+    "copyCoords": "Copiar coords",
+    "coordsTitle": "Coordenadas",
+    "noCoords": "Sin coords",
+    "infoTitle": "Info",
+    "stillNoCoords": "Aún sin coordenadas",
+    "updateCoordsHere": "Actualizar coords aquí",
+    "reportButton": "Reportar",
+    "loadingReportStatus": "Cargando estado del reporte…",
+    "reportSentTitle": "Reporte enviado",
+    "reportReviewedTitle": "Reporte revisado",
+    "reportStatus": {
+      "pending": "En revisión",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "scoreTitle": "Puntuación",
+    "hideBreakdown": "Ocultar desglose",
+    "viewBreakdown": "Ver desglose",
+    "loadingBreakdown": "Cargando desglose…",
+    "noBreakdownYet": "Aún no hay suficientes valoraciones para mostrar el desglose.",
+    "criterionFallback": "Criterio",
+    "reviewsTitle": "Reseñas",
+    "noReviews": "Aún no hay reseñas.",
+    "userFallback": "Usuario",
+    "priceLine": "Precio: {{price}}",
+    "reviewNoBreakdown": "Esta reseña no tiene desglose disponible.",
+    "reviews": {
+      "none": "Sin reseñas",
+      "one": "1 reseña",
+      "many": "{{count}} reseñas"
+    }
+  },
+  "rankings": {
+    "monthTag": "Ranking - Mes",
+    "allTag": "Ranking - Siempre",
+    "monthLabel": "Mes natural",
+    "allLabel": "Historico",
+    "searchPlaceholder": "Buscar por nombre o ciudad",
+    "loading": "Preparando rankings.",
+    "noResults": "Prueba con otro nombre o ciudad.",
+    "loadError": "Error cargando rankings",
+    "showingOf": "Mostrando {{shown}} de {{total}}",
+    "noResultsTitle": "Sin resultados",
+    "places": {
+      "one": "{{count}} local",
+      "many": "{{count}} locales"
+    },
+    "reviews": {
+      "none": "Sin resenas",
+      "one": "1 resena",
+      "many": "{{count}} resenas"
+    }
+  },
+  "user": {
+    "userFallback": "Usuario",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "recommendations": "Recomendaciones",
+    "noRatings": "Aún no hay valoraciones.",
+    "errors": {
+      "updateFailedTitle": "No se pudo actualizar",
+      "tryAgain": "Inténtalo de nuevo."
+    }
+  },
+  "venueSuggest": {
+    "title": "Proponer local",
+    "subtitle": "Si no existe en la app, envíanos los datos y lo revisaremos.",
+    "name": "Nombre *",
+    "city": "Ciudad *",
+    "address": "Dirección (opcional)",
+    "mapsUrl": "Google Maps URL (opcional)",
+    "notes": "Notas (opcional)",
+    "send": "Enviar propuesta",
+    "sending": "Enviando…",
+    "placeholders": {
+      "name": "Ej: Bar Manolo",
+      "city": "Ej: Valencia",
+      "address": "Calle, número…",
+      "mapsUrl": "https://maps.app.goo.gl/…",
+      "notes": "Ej: mejor bocadillo de…"
+    },
+    "errors": {
+      "missingFields": "Faltan campos: nombre y ciudad.",
+      "invalidUrl": "El enlace debe empezar por http(s)://",
+      "submitFailed": "No se pudo enviar la propuesta."
+    }
+  },
+  "reportModal": {
+    "titleFallback": "Reportar datos incorrectos",
+    "titleWithVenue": "Reportar: {{venueName}}",
+    "reasonLabel": "Motivo",
+    "detailsLabel": "Detalles (opcional)",
+    "detailsPlaceholder": "Ej: la dirección correcta es…, o pega un enlace (Google Maps/Instagram)",
+    "submit": "Enviar reporte",
+    "missingReasonTitle": "Falta el motivo",
+    "missingReasonMsg": "Selecciona un motivo para poder enviar el reporte.",
+    "pendingHint": "Se guardará como “pendiente” para revisión manual.",
+    "reason": {
+      "address": "Dirección incorrecta",
+      "coords": "Coordenadas mal",
+      "closed": "Cerrado / ya no existe",
+      "name": "Nombre incorrecto",
+      "other": "Otro"
+    }
+  },
+  "criteriaHelp": {
+    "buen_gasto": {
+      "title": "Buen gasto",
+      "body": "Relación calidad/precio. Un 5 si lo que recibes compensa claramente lo que pagas; un 1 si te parece caro para lo que es."
+    },
+    "collarets": {
+      "title": "Collarets",
+      "body": "El punch del esmorzaret: tamaño, contundencia y satisfacción general. Un 5 si sales feliz y completo; un 1 si te quedas a medias."
+    },
+    "producto": {
+      "title": "Producto",
+      "body": "Calidad de ingredientes y ejecución del bocata. Un 5 si el género y el punto están finos; un 1 si es flojo o industrial."
+    },
+    "pan": {
+      "title": "Pan",
+      "body": "Textura, frescura y equilibrio del pan con el contenido. Un 5 si suma (crujiente, buen punto); un 1 si resta (seco, chicle)."
+    },
+    "cremaet": {
+      "title": "Cremaet",
+      "body": "Si lo pides: intensidad, equilibrio y magia. Un 5 si está redondo; un 1 si es flojo o mal montado."
+    },
+    "ambiente": {
+      "title": "Ambiente",
+      "body": "Servicio, ritmo, comodidad y vibes. Un 5 si repetirías por la experiencia; un 1 si te echa para atrás."
+    }
+  }
+}

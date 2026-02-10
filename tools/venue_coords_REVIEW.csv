@@ -1,0 +1,7 @@
+venue_id,name,city,address_text,google_maps_url,query_used,provider,lat,lon,label,reason
+71c14599-f563-4ec3-91bc-2f940dc542e5,París - Los Isidros,Valencia,,https://www.google.com/maps/search/?api=1&query=Par%C3%ADs%20-%20Los%20Isidros%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana,,,,,,no_result
+935f6edc-07db-4793-b251-8fa1df2b2a17,Fonda Canyella,Valencia (Campanar),,https://www.google.com/maps/search/?api=1&query=Fonda%20Canyella%2C%20Val%C3%A8ncia%20%28Campanar%29%2C%20Valencia%2C%20Comunitat%20Valenciana,,,,,,no_result
+a5fc0f24-ea2e-45a4-9638-786dd14b546b,Central Bar by Ricard Camarena,Valencia,,https://www.google.com/maps/search/?api=1&query=Central%20Bar%20by%20Ricard%20Camarena%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana,,,,,,no_result
+ac2b6fc9-c1d4-4013-b2ba-36988117164a,El Baret de Javi,Valencia,,https://www.google.com/maps/search/?api=1&query=El%20Baret%20de%20Javi%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a,,,,,,no_result
+b9e54a2f-6aee-43d2-9c35-deb8497975ac,El Trocito del Medio,Valencia,,https://www.google.com/maps/search/?api=1&query=El%20Trocito%20del%20Medio%2C%20Valencia%2C%20Comunitat%20Valenciana%2C%20Espa%C3%B1a,,,,,,no_result
+cafc4e10-c2a4-4c00-9bd0-6e65159c893c,Grupo Gastroadictos (grupo),Valencia,,https://www.google.com/maps/search/?api=1&query=Grupo%20Gastroadictos%20%28grupo%29%2C%20Val%C3%A8ncia%2C%20Valencia%2C%20Comunitat%20Valenciana,,,,,,no_result
