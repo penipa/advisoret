@@ -205,7 +205,8 @@
   },
   "featured": {
     "tags": {
-      "recommended": "RECOMMENDED"
+      "recommended": "RECOMMENDED",
+      "sponsored": "SPONSORED"
     }
   },
   "rate": {
