@@ -1,6 +1,7 @@
 // src/content/criteriaHelp.ts
 // Tooltips por criterio preparados para multi-producto.
 // Hoy: esmorzaret. Mañana: tiramisú/paella/orxata… sin tocar pantallas.
+import i18n from "../i18n";
 
 export type CriterionLike = {
   id: string;
@@ -29,35 +30,42 @@ function pickLabel(c: CriterionLike) {
 }
 
 // Mapa por code si lo tenéis poblado en BD (lo ideal a futuro)
-const helpByCode: Record<string, CriterionHelp> = {
+const helpByCode: Record<string, { titleKey: string; bodyKey: string }> = {
   // ejemplos (si tus codes son distintos, no pasa nada: hay fallback por label)
   buen_gasto: {
-    title: "Buen gasto",
-    body: "Relación calidad/precio. Un 5 si lo que recibes compensa claramente lo que pagas; un 1 si te parece caro para lo que es.",
+    titleKey: "criteriaHelp.buen_gasto.title",
+    bodyKey: "criteriaHelp.buen_gasto.body",
   },
   collarets: {
-    title: "Collarets",
-    body: "El ‘punch’ del esmorzaret: tamaño, contundencia y satisfacción general. Un 5 si sales feliz y completo; un 1 si te quedas a medias.",
+    titleKey: "criteriaHelp.collarets.title",
+    bodyKey: "criteriaHelp.collarets.body",
   },
   producto: {
-    title: "Producto",
-    body: "Calidad de ingredientes y ejecución del bocata. Un 5 si el género y el punto están finos; un 1 si es flojo o industrial.",
+    titleKey: "criteriaHelp.producto.title",
+    bodyKey: "criteriaHelp.producto.body",
   },
   pan: {
-    title: "Pan",
-    body: "Textura, frescura y equilibrio del pan con el contenido. Un 5 si suma (crujiente, buen punto); un 1 si resta (seco, chicle).",
+    titleKey: "criteriaHelp.pan.title",
+    bodyKey: "criteriaHelp.pan.body",
   },
   cremaet: {
-    title: "Cremaet",
-    body: "Si lo pides: intensidad, equilibrio y ‘magia’. Un 5 si está redondo; un 1 si es flojo o mal montado.",
+    titleKey: "criteriaHelp.cremaet.title",
+    bodyKey: "criteriaHelp.cremaet.body",
   },
   ambiente: {
-    title: "Ambiente",
-    body: "Servicio, ritmo, comodidad y vibes. Un 5 si repetirías por la experiencia; un 1 si te echa para atrás.",
+    titleKey: "criteriaHelp.ambiente.title",
+    bodyKey: "criteriaHelp.ambiente.body",
   },
 };
 
-function esmorzaretFallbackByLabel(labelRaw: string): CriterionHelp | null {
+function toHelp(entry: { titleKey: string; bodyKey: string }): CriterionHelp {
+  return {
+    title: i18n.t(entry.titleKey),
+    body: i18n.t(entry.bodyKey),
+  };
+}
+
+function esmorzaretFallbackByLabel(labelRaw: string): { titleKey: string; bodyKey: string } | null {
   const l = norm(labelRaw);
 
   if (!l) return null;
@@ -87,13 +95,14 @@ function esmorzaretFallbackByLabel(labelRaw: string): CriterionHelp | null {
 
 export function getCriterionHelp(productTypeId: string, c: CriterionLike): CriterionHelp | null {
   const code = (c.code || "").trim();
-  if (code && helpByCode[code]) return helpByCode[code];
+  if (code && helpByCode[code]) return toHelp(helpByCode[code]);
 
   const label = pickLabel(c);
 
   // Por producto: hoy esmorzaret; mañana añades otros bloques
   if (productTypeId === ESMORZARET_PRODUCT_TYPE_ID) {
-    return esmorzaretFallbackByLabel(label);
+    const found = esmorzaretFallbackByLabel(label);
+    return found ? toHelp(found) : null;
   }
 
   // Otros product types: por ahora no hay tooltips -> no se muestra icono

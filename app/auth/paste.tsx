@@ -16,6 +16,7 @@ import { theme } from "../../src/theme";
 import { TText } from "../../src/ui/TText";
 import { TCard } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
+import { useTranslation } from "react-i18next";
 
 function clean(s: string) {
   return s.trim().replace(/\s+/g, "");
@@ -36,6 +37,7 @@ function parseLink(raw: string): { token?: string; type?: string } {
 }
 
 export default function PasteLinkScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -120,29 +122,29 @@ export default function PasteLinkScreen() {
           }}
         >
           <TText size={theme.font.title} weight="800">
-            Pegar enlace de acceso
+            {t("auth.pasteTitle")}
           </TText>
 
           <TText muted style={{ marginTop: 8 }}>
-            Si el email no abre la app, copia el link del correo y pégalo aquí.
+            {t("auth.pasteHelp")}
           </TText>
 
           <Pressable
             onPress={() => Keyboard.dismiss()}
             style={{ alignSelf: "flex-end", marginTop: theme.spacing.sm }}
           >
-            <TText muted>Ocultar teclado</TText>
+            <TText muted>{t("auth.hideKeyboard")}</TText>
           </Pressable>
 
           <TCard style={{ marginTop: theme.spacing.md }}>
-            <TText weight="700">Email (por si hace falta)</TText>
+            <TText weight="700">{t("auth.email")}</TText>
             <TextInput
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
-              placeholder="tu@email.com"
+              placeholder={t("auth.emailPlaceholder")}
               placeholderTextColor={theme.colors.textMuted}
               returnKeyType="done"
               onSubmitEditing={() => Keyboard.dismiss()}
@@ -185,7 +187,7 @@ export default function PasteLinkScreen() {
 
             <View style={{ marginTop: theme.spacing.md }}>
               <TButton
-                title={loading ? "Validando..." : "Validar y entrar"}
+                title={loading ? t("auth.validating") : t("auth.validateAndEnter")}
                 onPress={loading ? undefined : verifyFromLink}
               />
             </View>

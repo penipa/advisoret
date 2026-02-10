@@ -11,16 +11,17 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const REASONS = [
-  "Dirección incorrecta",
-  "Coordenadas mal",
-  "Cerrado / ya no existe",
-  "Nombre incorrecto",
-  "Otro",
+  { value: "Dirección incorrecta", key: "address" },
+  { value: "Coordenadas mal", key: "coords" },
+  { value: "Cerrado / ya no existe", key: "closed" },
+  { value: "Nombre incorrecto", key: "name" },
+  { value: "Otro", key: "other" },
 ] as const;
 
-type Reason = (typeof REASONS)[number];
+type Reason = (typeof REASONS)[number]["value"];
 
 export function ReportVenueModal(props: {
   visible: boolean;
@@ -28,6 +29,7 @@ export function ReportVenueModal(props: {
   onClose: () => void;
   onSubmit: (data: { reason: string; message: string }) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const { visible, onClose, onSubmit, venueName } = props;
 
   const [reason, setReason] = useState<Reason | "">("");
@@ -35,8 +37,10 @@ export function ReportVenueModal(props: {
   const [submitting, setSubmitting] = useState(false);
 
   const title = useMemo(() => {
-    return venueName ? `Reportar: ${venueName}` : "Reportar datos incorrectos";
-  }, [venueName]);
+    return venueName
+      ? t("reportModal.titleWithVenue", { venueName })
+      : t("reportModal.titleFallback");
+  }, [venueName, t]);
 
   const canSubmit = reason !== "" && !submitting;
 
@@ -55,7 +59,7 @@ export function ReportVenueModal(props: {
 
   const handleSubmit = async () => {
     if (!reason) {
-      Alert.alert("Falta el motivo", "Selecciona un motivo para poder enviar el reporte.");
+      Alert.alert(t("reportModal.missingReasonTitle"), t("reportModal.missingReasonMsg"));
       return;
     }
     try {
@@ -89,28 +93,30 @@ export function ReportVenueModal(props: {
         </View>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <Text style={styles.label}>Motivo</Text>
+          <Text style={styles.label}>{t("reportModal.reasonLabel")}</Text>
 
           <View style={styles.reasonsWrap}>
             {REASONS.map((r) => {
-              const active = r === reason;
+              const active = r.value === reason;
               return (
                 <Pressable
-                  key={r}
-                  onPress={() => setReason(r)}
+                  key={r.key}
+                  onPress={() => setReason(r.value)}
                   style={[styles.reasonPill, active && styles.reasonPillActive]}
                 >
-                  <Text style={[styles.reasonText, active && styles.reasonTextActive]}>{r}</Text>
+                  <Text style={[styles.reasonText, active && styles.reasonTextActive]}>
+                    {t(`reportModal.reason.${r.key}`)}
+                  </Text>
                 </Pressable>
               );
             })}
           </View>
 
-          <Text style={[styles.label, { marginTop: 14 }]}>Detalles (opcional)</Text>
+          <Text style={[styles.label, { marginTop: 14 }]}>{t("reportModal.detailsLabel")}</Text>
           <TextInput
             value={message}
             onChangeText={setMessage}
-            placeholder="Ej: la dirección correcta es…, o pega un enlace (Google Maps/Instagram)"
+            placeholder={t("reportModal.detailsPlaceholder")}
             placeholderTextColor="#999"
             multiline
             style={styles.textarea}
@@ -124,10 +130,10 @@ export function ReportVenueModal(props: {
             disabled={!canSubmit}
             style={[styles.submitBtn, !canSubmit && styles.submitBtnDisabled]}
           >
-            {submitting ? <ActivityIndicator /> : <Text style={styles.submitText}>Enviar reporte</Text>}
+            {submitting ? <ActivityIndicator /> : <Text style={styles.submitText}>{t("reportModal.submit")}</Text>}
           </Pressable>
 
-          <Text style={styles.hint}>Se guardará como “pendiente” para revisión manual.</Text>
+          <Text style={styles.hint}>{t("reportModal.pendingHint")}</Text>
         </ScrollView>
       </View>
     </Modal>

@@ -777,12 +777,12 @@ export default function AccountScreen() {
               {/* Acciones */}
               <View style={{ marginTop: 14, gap: 10 as any }}>
                 <TButton
-                  title="Cambiar cuenta"
+                  title={t("account.changeAccount")}
                   variant="ghost"
                   onPress={() => void changeAccount()}
                   style={{ width: "100%" }}
                 />
-                <TButton title="Cerrar sesión" onPress={() => void logout()} style={{ width: "100%" }} />
+                <TButton title={t("account.logout")} onPress={() => void logout()} style={{ width: "100%" }} />
               </View>
 
               <View style={{ marginTop: 14, gap: 8 as any }}>

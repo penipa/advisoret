@@ -1,11 +1,12 @@
 import { Stack } from "expo-router";
+import i18n from "../../src/i18n";
 
 export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
         headerTitle: "",
-        headerBackTitle: "Atrás",
+        headerBackTitle: i18n.t("common.back"),
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />

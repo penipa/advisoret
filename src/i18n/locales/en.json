@@ -3,13 +3,132 @@
     "appName": "Advisoret",
     "back": "Back",
     "close": "Close",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "loadingDots": "Loading...",
+    "reload": "Reload",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "new": "NEW",
+    "goBack": "Back"
   },
   "languages": {
     "es": "Spanish",
     "en": "English"
   },
+  "tabs": {
+    "home": "Home",
+    "explore": "Explore",
+    "account": "Account"
+  },
+  "modal": {
+    "title": "This is a modal",
+    "goHome": "Go to home screen"
+  },
+  "auth": {
+    "access": "Access",
+    "methodHelp": "Choose method: email code or password.",
+    "code": "Code",
+    "password": "Password",
+    "email": "Email",
+    "emailPlaceholder": "you@email.com",
+    "sendCode": "Send code",
+    "sending": "Sending…",
+    "enter": "Sign in",
+    "entering": "Signing in…",
+    "noteExpo": "Note: in Expo Go, magic links (deep links) can fail. That's why email access uses a code.",
+    "pasteTitle": "Paste access link",
+    "pasteHelp": "If the email does not open the app, copy the link from the email and paste it here.",
+    "hideKeyboard": "Hide keyboard",
+    "validateAndEnter": "Validate and sign in",
+    "validating": "Validating..."
+  },
   "account": {
-    "language": "Language"
+    "language": "Language",
+    "changeAccount": "Switch account",
+    "logout": "Sign out"
+  },
+  "explore": {
+    "title": "Explore",
+    "back": "Back",
+    "clear": "Clear",
+    "searchPlaceholder": "Search place, city or address…",
+    "cityChip": "📍 City",
+    "awarded": "🏆 Awarded",
+    "withoutAward": "No award",
+    "noResults": "No results.",
+    "endResults": "End of results"
+  },
+  "rankings": {
+    "monthTag": "Ranking - Month",
+    "allTag": "Ranking - All time",
+    "monthLabel": "Calendar month",
+    "allLabel": "Historical",
+    "searchPlaceholder": "Search by name or city",
+    "loading": "Preparing rankings.",
+    "noResults": "Try another name or city."
+  },
+  "user": {
+    "userFallback": "User",
+    "follow": "Follow",
+    "following": "Following",
+    "recommendations": "Recommendations",
+    "noRatings": "No ratings yet."
+  },
+  "venueSuggest": {
+    "title": "Suggest place",
+    "subtitle": "If it does not exist in the app, send us the data and we will review it.",
+    "name": "Name *",
+    "city": "City *",
+    "address": "Address (optional)",
+    "mapsUrl": "Google Maps URL (optional)",
+    "notes": "Notes (optional)",
+    "send": "Send proposal",
+    "sending": "Sending…"
+  },
+  "reportModal": {
+    "titleFallback": "Report incorrect data",
+    "titleWithVenue": "Report: {{venueName}}",
+    "reasonLabel": "Reason",
+    "detailsLabel": "Details (optional)",
+    "detailsPlaceholder": "Ex: correct address is…, or paste a link (Google Maps/Instagram)",
+    "submit": "Send report",
+    "missingReasonTitle": "Reason required",
+    "missingReasonMsg": "Select a reason to submit the report.",
+    "pendingHint": "It will be saved as “pending” for manual review.",
+    "reason": {
+      "address": "Wrong address",
+      "coords": "Wrong coordinates",
+      "closed": "Closed / no longer exists",
+      "name": "Wrong name",
+      "other": "Other"
+    }
+  },
+  "criteriaHelp": {
+    "buen_gasto": {
+      "title": "Value for money",
+      "body": "Value for money ratio. A 5 if what you get clearly matches what you pay; a 1 if it feels expensive for what it is."
+    },
+    "collarets": {
+      "title": "Heft",
+      "body": "The punch of the esmorzaret: size, heartiness and overall satisfaction. A 5 if you leave fully satisfied; a 1 if it falls short."
+    },
+    "producto": {
+      "title": "Product",
+      "body": "Ingredient quality and sandwich execution. A 5 if produce and cooking are excellent; a 1 if weak or industrial."
+    },
+    "pan": {
+      "title": "Bread",
+      "body": "Texture, freshness and bread balance with the filling. A 5 if it adds value; a 1 if it hurts the experience."
+    },
+    "cremaet": {
+      "title": "Cremaet",
+      "body": "If you order it: intensity, balance and magic. A 5 if spot on; a 1 if weak or poorly built."
+    },
+    "ambiente": {
+      "title": "Atmosphere",
+      "body": "Service, pace, comfort and vibes. A 5 if you'd come back for the experience; a 1 if it pushes you away."
+    }
   }
 }

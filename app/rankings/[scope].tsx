@@ -10,6 +10,7 @@ import { TInput } from "../../src/ui/TInput";
 import { TText } from "../../src/ui/TText";
 import { TCard } from "../../src/ui/TCard";
 import { RatingRing } from "../../src/ui/RatingRing";
+import { useTranslation } from "react-i18next";
 
 const BRAND_A = require("../../assets/branding/logo-a.png");
 
@@ -46,6 +47,7 @@ function monthRangeISO() {
 }
 
 export default function RankingsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { scope } = useLocalSearchParams<{ scope?: string }>();
   const isMonth = scope === "month";
@@ -175,7 +177,7 @@ export default function RankingsScreen() {
         <BrandLockup
           title="Advisoret"
           iconSource={BRAND_A}
-          tag={isMonth ? UI.tagMonth : UI.tagAll}
+          tag={isMonth ? t("rankings.monthTag") : t("rankings.allTag")}
           style={{ marginBottom: theme.spacing.lg + 6 }}
         />
 
@@ -189,7 +191,7 @@ export default function RankingsScreen() {
           }}
         >
           <TButton
-            title="Volver"
+            title={t("common.goBack")}
             variant="ghost"
             onPress={() => router.back()}
             style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
@@ -216,7 +218,7 @@ export default function RankingsScreen() {
             </View>
 
             <TText muted style={{ marginLeft: 8 }}>
-              {isMonth ? UI.labelMonth : UI.labelAll}
+              {isMonth ? t("rankings.monthLabel") : t("rankings.allLabel")}
             </TText>
           </View>
         </View>
@@ -224,7 +226,7 @@ export default function RankingsScreen() {
         <TInput
           value={q}
           onChangeText={setQ}
-          placeholder="Buscar por nombre o ciudad"
+          placeholder={t("rankings.searchPlaceholder")}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
@@ -243,12 +245,12 @@ export default function RankingsScreen() {
         {loading ? (
           <TCard>
             <TText weight="800">Cargando{UI.ellipsis}</TText>
-            <TText muted style={{ marginTop: 6 }}>Preparando rankings.</TText>
+            <TText muted style={{ marginTop: 6 }}>{t("rankings.loading")}</TText>
           </TCard>
         ) : filtered.length === 0 ? (
           <TCard>
             <TText weight="800">Sin resultados</TText>
-            <TText muted style={{ marginTop: 6 }}>Prueba con otro nombre o ciudad.</TText>
+            <TText muted style={{ marginTop: 6 }}>{t("rankings.noResults")}</TText>
           </TCard>
         ) : (
           <View>

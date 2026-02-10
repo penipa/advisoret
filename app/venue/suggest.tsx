@@ -2,14 +2,14 @@
 // <SECTION:IMPORTS>
 import { useMemo, useState } from "react";
 import { SafeAreaView, ScrollView, TextInput, View, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 
 import { supabase } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
 import { TCard } from "../../src/ui/TCard";
 import { TText } from "../../src/ui/TText";
 import { TButton } from "../../src/ui/TButton";
-import { Stack } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 import { createVenueProposal } from "../../src/lib/venueProposals";
 // </SECTION:IMPORTS>
@@ -28,6 +28,7 @@ function isProbablyUrl(s: string) {
 
 // <SECTION:SCREEN>
 export default function SuggestVenueScreen() {
+  const { t } = useTranslation();
   // <SECTION:STATE>
   const router = useRouter();
 
@@ -113,23 +114,23 @@ export default function SuggestVenueScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Proponer local",
-          headerBackTitle: "Atrás",
+          title: t("venueSuggest.title"),
+          headerBackTitle: t("common.back"),
         }}
       />
 
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
         <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
           <TCard>
-            <TText weight="800">Proponer local</TText>
+            <TText weight="800">{t("venueSuggest.title")}</TText>
             <TText muted style={{ marginTop: 6 }}>
-              Si no existe en la app, envíanos los datos y lo revisaremos.
+              {t("venueSuggest.subtitle")}
             </TText>
 
             <View style={{ height: theme.spacing.md }} />
 
             <TText weight="700" size={12} muted>
-              Nombre *
+              {t("venueSuggest.name")}
             </TText>
             <TextInput
               value={name}
@@ -144,7 +145,7 @@ export default function SuggestVenueScreen() {
             <View style={{ height: 12 }} />
 
             <TText weight="700" size={12} muted>
-              Ciudad *
+              {t("venueSuggest.city")}
             </TText>
             <TextInput
               value={city}
@@ -159,7 +160,7 @@ export default function SuggestVenueScreen() {
             <View style={{ height: 12 }} />
 
             <TText weight="700" size={12} muted>
-              Dirección (opcional)
+              {t("venueSuggest.address")}
             </TText>
             <TextInput
               value={addressText}
@@ -174,7 +175,7 @@ export default function SuggestVenueScreen() {
             <View style={{ height: 12 }} />
 
             <TText weight="700" size={12} muted>
-              Google Maps URL (opcional)
+              {t("venueSuggest.mapsUrl")}
             </TText>
             <TextInput
               value={mapsUrl}
@@ -191,7 +192,7 @@ export default function SuggestVenueScreen() {
             <View style={{ height: 12 }} />
 
             <TText weight="700" size={12} muted>
-              Notas (opcional)
+              {t("venueSuggest.notes")}
             </TText>
             <TextInput
               value={notes}
@@ -215,7 +216,7 @@ export default function SuggestVenueScreen() {
             ) : null}
 
             <View style={{ marginTop: 14 }}>
-              <TButton title={saving ? "Enviando…" : "Enviar propuesta"} onPress={submit} disabled={!canSubmit} />
+              <TButton title={saving ? t("venueSuggest.sending") : t("venueSuggest.send")} onPress={submit} disabled={!canSubmit} />
             </View>
           </TCard>
         </ScrollView>

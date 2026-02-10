@@ -6,8 +6,10 @@ import { supabase } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
 import { TText } from "../../src/ui/TText";
 import { TCard } from "../../src/ui/TCard";
+import { useTranslation } from "react-i18next";
 
 export default function AuthCallbackScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams();
 
@@ -65,7 +67,7 @@ export default function AuthCallbackScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <View style={{ padding: theme.spacing.md }}>
         <TText size={theme.font.title} weight="800">
-          Iniciando sesión
+          {t("auth.enter")}
         </TText>
 
         <TCard style={{ marginTop: theme.spacing.md }}>

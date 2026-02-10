@@ -16,6 +16,7 @@ import { theme } from "../../src/theme";
 import { TCard } from "../../src/ui/TCard";
 import { TText } from "../../src/ui/TText";
 import { TButton } from "../../src/ui/TButton";
+import { useTranslation } from "react-i18next";
 
 const inputStyle = {
   backgroundColor: theme.colors.surface2 ?? theme.colors.surface,
@@ -29,6 +30,7 @@ const inputStyle = {
 } as const;
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [method, setMethod] = useState<"code" | "password">("code");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -168,10 +170,10 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <TText size={theme.font.title} weight="800">
-              Acceso
+              {t("auth.access")}
             </TText>
             <TText muted style={{ marginTop: 6 }}>
-              Elige método: código por email o contraseña.
+              {t("auth.methodHelp")}
             </TText>
 
             <View style={{ flexDirection: "row", marginTop: 12 }}>
@@ -180,7 +182,7 @@ export default function LoginScreen() {
                 disabled={busy}
                 style={{ ...pillStyle(method === "code"), marginRight: 10 }}
               >
-                <TText weight={method === "code" ? "800" : "600"}>Código</TText>
+                <TText weight={method === "code" ? "800" : "600"}>{t("auth.code")}</TText>
               </Pressable>
 
               <Pressable
@@ -188,16 +190,16 @@ export default function LoginScreen() {
                 disabled={busy}
                 style={pillStyle(method === "password")}
               >
-                <TText weight={method === "password" ? "800" : "600"}>Contraseña</TText>
+                <TText weight={method === "password" ? "800" : "600"}>{t("auth.password")}</TText>
               </Pressable>
             </View>
 
             <TCard style={{ marginTop: theme.spacing.md }}>
-              <TText muted>Email</TText>
+              <TText muted>{t("auth.email")}</TText>
               <View style={{ marginTop: 10 }}>
                 <TextInput
                   style={inputStyle}
-                  placeholder="tu@email.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   placeholderTextColor={theme.colors.textMuted}
                   value={email}
                   onChangeText={setEmail}
@@ -211,12 +213,12 @@ export default function LoginScreen() {
               {method === "password" ? (
                 <>
                   <TText muted style={{ marginTop: 12 }}>
-                    Contraseña
+                    {t("auth.password")}
                   </TText>
                   <View style={{ marginTop: 10 }}>
                     <TextInput
                       style={inputStyle}
-                      placeholder="Contraseña"
+                      placeholder={t("auth.password")}
                       placeholderTextColor={theme.colors.textMuted}
                       value={password}
                       onChangeText={setPassword}
@@ -230,7 +232,7 @@ export default function LoginScreen() {
 
                   <View style={{ marginTop: 12 }}>
                     <TButton
-                      title={busy ? "Entrando…" : "Entrar"}
+                      title={busy ? t("auth.entering") : t("auth.enter")}
                       onPress={() => void signInPassword()}
                       disabled={busy}
                     />
@@ -246,7 +248,7 @@ export default function LoginScreen() {
                 <>
                   <View style={{ marginTop: 12 }}>
                     <TButton
-                      title={busy ? "Enviando…" : "Enviar código"}
+                      title={busy ? t("auth.sending") : t("auth.sendCode")}
                       onPress={() => void sendCode()}
                       disabled={busy}
                     />
@@ -255,7 +257,7 @@ export default function LoginScreen() {
                   {sent && (
                     <>
                       <TText weight="700" style={{ marginTop: 18 }}>
-                        Código
+                        {t("auth.code")}
                       </TText>
                       <TText muted style={{ marginTop: 6 }}>
                         Pega el código (6–8 dígitos). Si pides otro, solo vale el último.
@@ -264,7 +266,7 @@ export default function LoginScreen() {
                       <View style={{ marginTop: 10 }}>
                         <TextInput
                           style={inputStyle}
-                          placeholder="Código"
+                          placeholder={t("auth.code")}
                           placeholderTextColor={theme.colors.textMuted}
                           value={otp}
                           onChangeText={(v) => setOtp(v.replace(/\D/g, "").slice(0, 12))}
@@ -276,7 +278,7 @@ export default function LoginScreen() {
 
                       <View style={{ marginTop: 12 }}>
                         <TButton
-                          title={busy ? "Entrando…" : "Entrar"}
+                          title={busy ? t("auth.entering") : t("auth.enter")}
                           onPress={() => void verifyCode()}
                           disabled={busy}
                         />
@@ -288,10 +290,10 @@ export default function LoginScreen() {
             </TCard>
 
             <View style={{ marginTop: 14 }}>
-              <TText muted size={theme.font.small}>
-                Nota: en Expo Go, los magic links (deep links) dan guerra. Por eso el acceso por email lo hacemos con código.
-              </TText>
-            </View>
+                <TText muted size={theme.font.small}>
+                  {t("auth.noteExpo")}
+                </TText>
+              </View>
           </ScrollView>
         </Pressable>
       </KeyboardAvoidingView>

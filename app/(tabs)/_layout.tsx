@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 import { HapticTab } from "../../components/haptic-tab";
 import { IconSymbol } from "../../components/ui/icon-symbol";
@@ -37,6 +38,7 @@ function shortLabel(s: string) {
 }
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const extraBottom = Platform.OS === "android" ? insets.bottom : 0;
 
@@ -88,14 +90,14 @@ export default function TabLayout() {
   }, [session?.user?.id]);
 
   const accountTitle = useMemo(() => {
-    if (!session) return "Cuenta";
+    if (!session) return t("tabs.account");
     const label =
       profile?.display_name ||
       (profile?.username ? `@${profile.username}` : null) ||
       session.user.email ||
-      "Cuenta";
+      t("tabs.account");
     return shortLabel(label);
-  }, [session, profile]);
+  }, [session, profile, t]);
 
   return (
     <Tabs
@@ -126,7 +128,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Inicio",
+          title: t("tabs.home"),
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
@@ -135,7 +137,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Explorar",
+          title: t("tabs.explore"),
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="magnifyingglass" color={color} />,
         }}
       />

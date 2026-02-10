@@ -16,6 +16,7 @@ import { supabase, venueCoverUrl } from "../lib/supabase";
 import { theme } from "../theme";
 import { TText } from "../ui/TText";
 import { TCard } from "../ui/TCard";
+import { useTranslation } from "react-i18next";
 
 type AwardMode = "all" | "awarded" | "not_awarded";
 
@@ -144,6 +145,7 @@ function formatCity(cityRaw?: string | null) {
 const PAGE_SIZE = 25;
 
 export default function ExploreScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ q?: string; city?: string; award?: string }>();
 
@@ -365,12 +367,12 @@ export default function ExploreScreen() {
           }}
         >
           <TText weight="800" size={12} muted>
-            Volver
+            {t("explore.back")}
           </TText>
         </Pressable>
 
         <TText size={theme.font.h2} weight="800" style={{ flex: 1 }}>
-          Explorar
+          {t("explore.title")}
         </TText>
 
         <Pressable
@@ -384,7 +386,7 @@ export default function ExploreScreen() {
           }}
         >
           <TText weight="800" size={12} muted>
-            Limpiar
+            {t("explore.clear")}
           </TText>
         </Pressable>
       </View>
@@ -406,7 +408,7 @@ export default function ExploreScreen() {
         <TextInput
           value={q}
           onChangeText={setQ}
-          placeholder="Buscar local, ciudad o dirección…"
+          placeholder={t("explore.searchPlaceholder")}
           placeholderTextColor={theme.colors.textMuted}
           style={{ color: theme.colors.text, fontSize: 16, flex: 1 }}
           autoCapitalize="none"
@@ -439,7 +441,7 @@ export default function ExploreScreen() {
       <View style={{ marginTop: 12 }}>
         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
           <Chip
-            label={selectedCity ? `📍 ${formatCity(selectedCity)}` : "📍 Localidad"}
+            label={selectedCity ? `📍 ${formatCity(selectedCity)}` : t("explore.cityChip")}
             active={!!selectedCity}
             onPress={() => Keyboard.dismiss()}
             rightIcon={
@@ -466,12 +468,12 @@ export default function ExploreScreen() {
             }
           />
           <Chip
-            label="🏆 Premiados"
+            label={t("explore.awarded")}
             active={awardMode === "awarded"}
             onPress={() => setAwardMode(awardMode === "awarded" ? "all" : "awarded")}
           />
           <Chip
-            label="Sin premio"
+            label={t("explore.withoutAward")}
             active={awardMode === "not_awarded"}
             onPress={() => setAwardMode(awardMode === "not_awarded" ? "all" : "not_awarded")}
           />
@@ -497,7 +499,9 @@ export default function ExploreScreen() {
       </View>
 
       {error ? (
-        <TText style={{ color: theme.colors.danger, marginTop: 10 }}>Error: {error}</TText>
+        <TText style={{ color: theme.colors.danger, marginTop: 10 }}>
+          {t("common.error")}: {error}
+        </TText>
       ) : null}
     </View>
   );
@@ -521,12 +525,12 @@ export default function ExploreScreen() {
             </View>
           ) : !loading && rows.length === 0 ? (
             <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 6 }}>
-              <TText muted>Sin resultados.</TText>
+              <TText muted>{t("explore.noResults")}</TText>
             </View>
           ) : !hasMore ? (
             <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 10 }}>
               <TText muted size={12}>
-                Fin de resultados
+                {t("explore.endResults")}
               </TText>
             </View>
           ) : null

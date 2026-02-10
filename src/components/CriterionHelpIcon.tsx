@@ -1,9 +1,10 @@
 // src/components/CriterionHelpIcon.tsx
 import { useMemo, useState } from "react";
-import { Modal, Pressable, View } from "react-native";
+import { Modal, Pressable } from "react-native";
 import { theme } from "../theme";
 import { TText } from "../ui/TText";
 import { CriterionLike, getCriterionHelp } from "../content/criteriaHelp";
+import { useTranslation } from "react-i18next";
 
 type CriterionWithHelp = CriterionLike & {
   help_es?: string | null;
@@ -17,6 +18,7 @@ export function CriterionHelpIcon({
   productTypeId: string;
   criterion: CriterionWithHelp;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const help = useMemo(() => {
@@ -94,7 +96,7 @@ export function CriterionHelpIcon({
                 backgroundColor: theme.colors.surface2,
               }}
             >
-              <TText weight="800">Cerrar</TText>
+              <TText weight="800">{t("common.close")}</TText>
             </Pressable>
           </Pressable>
         </Pressable>

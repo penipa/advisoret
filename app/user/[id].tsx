@@ -7,6 +7,7 @@ import { theme } from "../../src/theme";
 import { TText } from "../../src/ui/TText";
 import { TCard } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
+import { useTranslation } from "react-i18next";
 
 type Profile = {
   id: string;
@@ -45,6 +46,7 @@ function shortId(id: string) {
 }
 
 export default function UserProfileScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const profileId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -61,8 +63,8 @@ export default function UserProfileScreen() {
   const displayName = useMemo(() => {
     const label = (profile?.display_name ?? profile?.username ?? "").trim();
     if (label) return label;
-    return profileId ? `@${shortId(profileId)}` : "Usuario";
-  }, [profile, profileId]);
+    return profileId ? `@${shortId(profileId)}` : t("user.userFallback");
+  }, [profile, profileId, t]);
 
   useEffect(() => {
     if (!profileId) return;
@@ -178,7 +180,7 @@ export default function UserProfileScreen() {
 
           {meId && profileId && meId !== profileId ? (
             <TButton
-              title={isFollowing ? "Siguiendo" : "Seguir"}
+              title={isFollowing ? t("user.following") : t("user.follow")}
               variant={isFollowing ? "ghost" : "primary"}
               disabled={busy}
               onPress={() => void toggleFollow()}
@@ -194,7 +196,7 @@ export default function UserProfileScreen() {
 
         <View style={{ marginTop: theme.spacing.lg }}>
           <TText size={theme.font.h2} weight="700">
-            Recomendaciones
+            {t("user.recommendations")}
           </TText>
 
           {loading ? (
@@ -203,7 +205,7 @@ export default function UserProfileScreen() {
             </TText>
           ) : venues.length === 0 ? (
             <TText muted style={{ marginTop: 10 }}>
-              Aún no hay valoraciones.
+              {t("user.noRatings")}
             </TText>
           ) : (
             <View style={{ marginTop: theme.spacing.sm }}>

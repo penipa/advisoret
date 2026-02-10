@@ -3,13 +3,132 @@
     "appName": "Advisoret",
     "back": "Atrás",
     "close": "Cerrar",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "loadingDots": "Cargando...",
+    "reload": "Recargar",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "new": "NUEVO",
+    "goBack": "Volver"
   },
   "languages": {
     "es": "Español",
     "en": "English"
   },
+  "tabs": {
+    "home": "Inicio",
+    "explore": "Explorar",
+    "account": "Cuenta"
+  },
+  "modal": {
+    "title": "Este es un modal",
+    "goHome": "Ir al inicio"
+  },
+  "auth": {
+    "access": "Acceso",
+    "methodHelp": "Elige método: código por email o contraseña.",
+    "code": "Código",
+    "password": "Contraseña",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "sendCode": "Enviar código",
+    "sending": "Enviando…",
+    "enter": "Entrar",
+    "entering": "Entrando…",
+    "noteExpo": "Nota: en Expo Go, los magic links (deep links) dan guerra. Por eso el acceso por email lo hacemos con código.",
+    "pasteTitle": "Pegar enlace de acceso",
+    "pasteHelp": "Si el email no abre la app, copia el link del correo y pégalo aquí.",
+    "hideKeyboard": "Ocultar teclado",
+    "validateAndEnter": "Validar y entrar",
+    "validating": "Validando..."
+  },
   "account": {
-    "language": "Idioma"
+    "language": "Idioma",
+    "changeAccount": "Cambiar cuenta",
+    "logout": "Cerrar sesión"
+  },
+  "explore": {
+    "title": "Explorar",
+    "back": "Volver",
+    "clear": "Limpiar",
+    "searchPlaceholder": "Buscar local, ciudad o dirección…",
+    "cityChip": "📍 Localidad",
+    "awarded": "🏆 Premiados",
+    "withoutAward": "Sin premio",
+    "noResults": "Sin resultados.",
+    "endResults": "Fin de resultados"
+  },
+  "rankings": {
+    "monthTag": "Ranking - Mes",
+    "allTag": "Ranking - Siempre",
+    "monthLabel": "Mes natural",
+    "allLabel": "Historico",
+    "searchPlaceholder": "Buscar por nombre o ciudad",
+    "loading": "Preparando rankings.",
+    "noResults": "Prueba con otro nombre o ciudad."
+  },
+  "user": {
+    "userFallback": "Usuario",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "recommendations": "Recomendaciones",
+    "noRatings": "Aún no hay valoraciones."
+  },
+  "venueSuggest": {
+    "title": "Proponer local",
+    "subtitle": "Si no existe en la app, envíanos los datos y lo revisaremos.",
+    "name": "Nombre *",
+    "city": "Ciudad *",
+    "address": "Dirección (opcional)",
+    "mapsUrl": "Google Maps URL (opcional)",
+    "notes": "Notas (opcional)",
+    "send": "Enviar propuesta",
+    "sending": "Enviando…"
+  },
+  "reportModal": {
+    "titleFallback": "Reportar datos incorrectos",
+    "titleWithVenue": "Reportar: {{venueName}}",
+    "reasonLabel": "Motivo",
+    "detailsLabel": "Detalles (opcional)",
+    "detailsPlaceholder": "Ej: la dirección correcta es…, o pega un enlace (Google Maps/Instagram)",
+    "submit": "Enviar reporte",
+    "missingReasonTitle": "Falta el motivo",
+    "missingReasonMsg": "Selecciona un motivo para poder enviar el reporte.",
+    "pendingHint": "Se guardará como “pendiente” para revisión manual.",
+    "reason": {
+      "address": "Dirección incorrecta",
+      "coords": "Coordenadas mal",
+      "closed": "Cerrado / ya no existe",
+      "name": "Nombre incorrecto",
+      "other": "Otro"
+    }
+  },
+  "criteriaHelp": {
+    "buen_gasto": {
+      "title": "Buen gasto",
+      "body": "Relación calidad/precio. Un 5 si lo que recibes compensa claramente lo que pagas; un 1 si te parece caro para lo que es."
+    },
+    "collarets": {
+      "title": "Collarets",
+      "body": "El punch del esmorzaret: tamaño, contundencia y satisfacción general. Un 5 si sales feliz y completo; un 1 si te quedas a medias."
+    },
+    "producto": {
+      "title": "Producto",
+      "body": "Calidad de ingredientes y ejecución del bocata. Un 5 si el género y el punto están finos; un 1 si es flojo o industrial."
+    },
+    "pan": {
+      "title": "Pan",
+      "body": "Textura, frescura y equilibrio del pan con el contenido. Un 5 si suma (crujiente, buen punto); un 1 si resta (seco, chicle)."
+    },
+    "cremaet": {
+      "title": "Cremaet",
+      "body": "Si lo pides: intensidad, equilibrio y magia. Un 5 si está redondo; un 1 si es flojo o mal montado."
+    },
+    "ambiente": {
+      "title": "Ambiente",
+      "body": "Servicio, ritmo, comodidad y vibes. Un 5 si repetirías por la experiencia; un 1 si te echa para atrás."
+    }
   }
 }
