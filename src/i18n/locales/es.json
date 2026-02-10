@@ -135,6 +135,8 @@
     "connected": "Conectado",
     "idLabel": "ID",
     "myReports": "Mis reportes",
+    "expand": "Mostrar",
+    "collapse": "Ocultar",
     "loadingReports": "Cargando reportes…",
     "couldNotLoad": "No se pudieron cargar",
     "noReportsYet": "Aún no has enviado reportes",

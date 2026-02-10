@@ -914,9 +914,26 @@ export default function AccountScreen() {
                     </TText>
                   </View>
                 ) : null}
-                <TText muted size={12}>
-                  {reportsOpen ? "▾" : "▸"}
-                </TText>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6 as any,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
+                  }}
+                >
+                  <TText size={12} weight="800">
+                    {reportsOpen ? t("account.collapse") : t("account.expand")}
+                  </TText>
+                  <TText size={12} weight="800" muted>
+                    {reportsOpen ? "▾" : "▸"}
+                  </TText>
+                </View>
               </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadReports(session.user.id)} />
             </View>
@@ -1173,9 +1190,26 @@ export default function AccountScreen() {
                     </TText>
                   </View>
                 ) : null}
-                <TText muted size={12}>
-                  {proposalsOpen ? "▾" : "▸"}
-                </TText>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6 as any,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
+                  }}
+                >
+                  <TText size={12} weight="800">
+                    {proposalsOpen ? t("account.collapse") : t("account.expand")}
+                  </TText>
+                  <TText size={12} weight="800" muted>
+                    {proposalsOpen ? "▾" : "▸"}
+                  </TText>
+                </View>
               </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadMyProposals(session.user.id)} />
             </View>
