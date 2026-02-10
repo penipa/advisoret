@@ -914,28 +914,9 @@ export default function AccountScreen() {
                     </TText>
                   </View>
                 ) : null}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6 as any,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: theme.colors.border,
-                    backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
-                  }}
-                >
-                  <TText size={12} weight="800">
-                    {reportsOpen
-                      ? t("account.history.hide")
-                      : t("account.history.view", { count: reports.length })}
-                  </TText>
-                  <TText size={12} weight="800" muted>
-                    {reportsOpen ? "▾" : "▸"}
-                  </TText>
-                </View>
+                <TText size={12} weight="800" muted>
+                  {reportsOpen ? "▾" : "▸"}
+                </TText>
               </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadReports(session.user.id)} />
             </View>
@@ -1192,28 +1173,9 @@ export default function AccountScreen() {
                     </TText>
                   </View>
                 ) : null}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6 as any,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: theme.colors.border,
-                    backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
-                  }}
-                >
-                  <TText size={12} weight="800">
-                    {proposalsOpen
-                      ? t("account.history.hide")
-                      : t("account.history.view", { count: myProposals.length })}
-                  </TText>
-                  <TText size={12} weight="800" muted>
-                    {proposalsOpen ? "▾" : "▸"}
-                  </TText>
-                </View>
+                <TText size={12} weight="800" muted>
+                  {proposalsOpen ? "▾" : "▸"}
+                </TText>
               </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadMyProposals(session.user.id)} />
             </View>
