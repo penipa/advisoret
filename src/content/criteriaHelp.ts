@@ -26,7 +26,11 @@ function norm(s: string) {
 }
 
 function pickLabel(c: CriterionLike) {
-  return (c.name_es || c.name_en || "").trim();
+  const lang = (i18n.language || "es").toLowerCase();
+  const isEn = lang.startsWith("en");
+  return isEn
+    ? (c.name_en || c.name_es || "").trim()
+    : (c.name_es || c.name_en || "").trim();
 }
 
 // Mapa por code si lo tenéis poblado en BD (lo ideal a futuro)

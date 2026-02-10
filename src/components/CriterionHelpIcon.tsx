@@ -5,6 +5,7 @@ import { theme } from "../theme";
 import { TText } from "../ui/TText";
 import { CriterionLike, getCriterionHelp } from "../content/criteriaHelp";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 type CriterionWithHelp = CriterionLike & {
   help_es?: string | null;
@@ -22,15 +23,21 @@ export function CriterionHelpIcon({
   const [open, setOpen] = useState(false);
 
   const help = useMemo(() => {
-    const title = (criterion.name_es || criterion.name_en || "").trim();
+    const lang = (i18n.language || "es").toLowerCase();
+    const isEn = lang.startsWith("en");
+    const title = isEn
+      ? (criterion.name_en || criterion.name_es || "").trim()
+      : (criterion.name_es || criterion.name_en || "").trim();
 
     // ✅ Prioridad: texto desde Supabase (editable sin redeploy)
-    const body = (criterion.help_es || criterion.help_en || "").trim();
+    const body = isEn
+      ? (criterion.help_en || criterion.help_es || "").trim()
+      : (criterion.help_es || criterion.help_en || "").trim();
     if (title && body) return { title, body };
 
     // Fallback: tooltips hardcoded (por si help_es no está poblado)
     return getCriterionHelp(productTypeId, criterion);
-  }, [productTypeId, criterion]);
+  }, [productTypeId, criterion, i18n.language]);
 
   if (!help) return null;
 
