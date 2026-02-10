@@ -48,7 +48,7 @@ export default function LoginScreen() {
   const sendCode = async () => {
     const e = email.trim().toLowerCase();
     if (!e || !e.includes("@")) {
-      Alert.alert("Email", "Pon un email válido.");
+      Alert.alert(t("auth.login.alerts.emailTitle"), t("auth.login.alerts.invalidEmail"));
       return;
     }
 
@@ -66,9 +66,9 @@ export default function LoginScreen() {
       if (error) throw error;
 
       setSent(true);
-      Alert.alert("Código enviado", "Revisa tu correo e introduce el código.");
+      Alert.alert(t("auth.login.alerts.codeSentTitle"), t("auth.login.alerts.codeSentMessage"));
     } catch (err: any) {
-      Alert.alert("Error", err?.message ?? "No se pudo enviar el código.");
+      Alert.alert(t("common.error"), err?.message ?? t("auth.login.alerts.sendCodeFailed"));
     } finally {
       setBusy(false);
     }
@@ -79,11 +79,11 @@ export default function LoginScreen() {
     const code = otp.trim();
 
     if (!e || !e.includes("@")) {
-      Alert.alert("Email", "Pon el mismo email al que pediste el código.");
+      Alert.alert(t("auth.login.alerts.emailTitle"), t("auth.login.alerts.sameEmailRequired"));
       return;
     }
     if (code.length < 6) {
-      Alert.alert("Código", "Pega el código del correo (normalmente 6–8 dígitos).");
+      Alert.alert(t("auth.login.alerts.codeTitle"), t("auth.login.alerts.pasteCodeHint"));
       return;
     }
 
@@ -111,9 +111,9 @@ export default function LoginScreen() {
       // RootLayout escucha la sesión y te lleva a Tabs automáticamente.
     } catch (err: any) {
       Alert.alert(
-        "No se pudo entrar",
+        t("auth.login.alerts.signInFailedTitle"),
         err?.message ??
-          "Código inválido o caducado. Si pediste otro código, solo vale el último."
+          t("auth.login.alerts.invalidOrExpiredCode")
       );
     } finally {
       setBusy(false);
@@ -125,11 +125,11 @@ export default function LoginScreen() {
     const p = password;
 
     if (!e || !e.includes("@")) {
-      Alert.alert("Email", "Pon un email válido.");
+      Alert.alert(t("auth.login.alerts.emailTitle"), t("auth.login.alerts.invalidEmail"));
       return;
     }
     if (!p || p.length < 6) {
-      Alert.alert("Contraseña", "Pon tu contraseña (mínimo 6 caracteres).");
+      Alert.alert(t("auth.login.alerts.passwordTitle"), t("auth.login.alerts.passwordMinLength"));
       return;
     }
 
@@ -143,7 +143,7 @@ export default function LoginScreen() {
       // ✅ NO navegamos aquí.
       // RootLayout escucha la sesión y te lleva a Tabs automáticamente.
     } catch (err: any) {
-      Alert.alert("No se pudo entrar", err?.message ?? "Email o contraseña incorrectos.");
+      Alert.alert(t("auth.login.alerts.signInFailedTitle"), err?.message ?? t("auth.login.alerts.invalidCredentials"));
     } finally {
       setBusy(false);
     }
@@ -240,7 +240,7 @@ export default function LoginScreen() {
 
                   <View style={{ marginTop: 12 }}>
                     <TText muted size={theme.font.small}>
-                      Consejo: para TestFlight/App Review usa una cuenta demo con contraseña (la creas en Supabase).
+                      {t("auth.login.passwordMethodTip")}
                     </TText>
                   </View>
                 </>
@@ -260,7 +260,7 @@ export default function LoginScreen() {
                         {t("auth.code")}
                       </TText>
                       <TText muted style={{ marginTop: 6 }}>
-                        Pega el código (6–8 dígitos). Si pides otro, solo vale el último.
+                        {t("auth.login.otpHint")}
                       </TText>
 
                       <View style={{ marginTop: 10 }}>

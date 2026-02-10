@@ -42,7 +42,26 @@
     "pasteHelp": "Si el email no abre la app, copia el link del correo y pégalo aquí.",
     "hideKeyboard": "Ocultar teclado",
     "validateAndEnter": "Validar y entrar",
-    "validating": "Validando..."
+    "validating": "Validando...",
+    "login": {
+      "passwordMethodTip": "Consejo: para TestFlight/App Review usa una cuenta demo con contraseña (la creas en Supabase).",
+      "otpHint": "Pega el código (6–8 dígitos). Si pides otro, solo vale el último.",
+      "alerts": {
+        "emailTitle": "Email",
+        "codeTitle": "Código",
+        "passwordTitle": "Contraseña",
+        "codeSentTitle": "Código enviado",
+        "codeSentMessage": "Revisa tu correo e introduce el código.",
+        "signInFailedTitle": "No se pudo entrar",
+        "invalidEmail": "Pon un email válido.",
+        "sameEmailRequired": "Pon el mismo email al que pediste el código.",
+        "pasteCodeHint": "Pega el código del correo (normalmente 6–8 dígitos).",
+        "sendCodeFailed": "No se pudo enviar el código.",
+        "invalidOrExpiredCode": "Código inválido o caducado. Si pediste otro código, solo vale el último.",
+        "passwordMinLength": "Pon tu contraseña (mínimo 6 caracteres).",
+        "invalidCredentials": "Email o contraseña incorrectos."
+      }
+    }
   },
   "account": {
     "title": "Cuenta",

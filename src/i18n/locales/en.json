@@ -42,7 +42,26 @@
     "pasteHelp": "If the email does not open the app, copy the link from the email and paste it here.",
     "hideKeyboard": "Hide keyboard",
     "validateAndEnter": "Validate and sign in",
-    "validating": "Validating..."
+    "validating": "Validating...",
+    "login": {
+      "passwordMethodTip": "Tip: for TestFlight/App Review use a demo account with password (create it in Supabase).",
+      "otpHint": "Paste the code (6-8 digits). If you request another one, only the latest works.",
+      "alerts": {
+        "emailTitle": "Email",
+        "codeTitle": "Code",
+        "passwordTitle": "Password",
+        "codeSentTitle": "Code sent",
+        "codeSentMessage": "Check your email and enter the code.",
+        "signInFailedTitle": "Could not sign in",
+        "invalidEmail": "Enter a valid email.",
+        "sameEmailRequired": "Use the same email you used to request the code.",
+        "pasteCodeHint": "Paste the code from the email (usually 6-8 digits).",
+        "sendCodeFailed": "Could not send the code.",
+        "invalidOrExpiredCode": "Invalid or expired code. If you requested another code, only the latest works.",
+        "passwordMinLength": "Enter your password (minimum 6 characters).",
+        "invalidCredentials": "Incorrect email or password."
+      }
+    }
   },
   "account": {
     "title": "Account",
