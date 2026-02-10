@@ -89,6 +89,13 @@
       "approved": "Aprobado",
       "rejected": "Rechazado"
     },
+    "resolution": {
+      "reportApproved": "Aprobado.",
+      "reportRejected": "Rechazado.",
+      "proposalApproved": "Aprobada.",
+      "proposalRejected": "Rechazada.",
+      "proposalApprovedShort": "Aprobada."
+    },
     "errors": {
       "changeLanguage": "No se pudo cambiar el idioma.",
       "changeAccount": "No se pudo cambiar de cuenta.",

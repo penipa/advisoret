@@ -81,6 +81,38 @@ function statusLabel(s: "pending" | "approved" | "rejected") {
   return i18n.t("account.status.pending");
 }
 
+function normalizeResolutionNote(
+  note: string | null | undefined,
+  kind: "report" | "proposal"
+): string | null {
+  const raw = (note ?? "").trim();
+  if (!raw) return null;
+
+  const normalized = raw.toLowerCase();
+
+  if (kind === "report") {
+    if (normalized === "revisado: se acepta el reporte.") {
+      return i18n.t("account.resolution.reportApproved");
+    }
+    if (normalized === "revisado: no se aplica ningún cambio.") {
+      return i18n.t("account.resolution.reportRejected");
+    }
+    return raw;
+  }
+
+  if (normalized === "revisado: se acepta la propuesta.") {
+    return i18n.t("account.resolution.proposalApproved");
+  }
+  if (normalized === "revisado: no se añade el local.") {
+    return i18n.t("account.resolution.proposalRejected");
+  }
+  if (normalized.startsWith("aprobada e insertada en venues.")) {
+    return i18n.t("account.resolution.proposalApprovedShort");
+  }
+
+  return raw;
+}
+
 function shortId(id?: string | null) {
   const v = (id ?? "").trim();
   if (!v) return "—";
@@ -851,6 +883,7 @@ export default function AccountScreen() {
                     const venueLabel = it.venue?.name
                       ? `${it.venue.name}${it.venue.city ? ` · ${it.venue.city}` : ""}`
                       : null;
+                    const resolutionNote = normalizeResolutionNote(it.resolution_note, "report");
 
                     return (
                       <View
@@ -889,7 +922,7 @@ export default function AccountScreen() {
 
                         <TText style={{ marginTop: 6 }}>{it.reason ? it.reason : t("account.reportFallback")}</TText>
 
-                        {it.resolution_note ? <TText muted style={{ marginTop: 6 }}>{it.resolution_note}</TText> : null}
+                        {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
                       </View>
                     );
                   })}
@@ -1066,6 +1099,7 @@ export default function AccountScreen() {
                     const title = (it.name ?? t("account.proposalFallback")).trim();
                     const line2 = [it.city, it.address_text].filter(Boolean).join(" · ");
                     const note = (it.notes ?? it.message ?? "").trim();
+                    const resolutionNote = normalizeResolutionNote(it.resolution_note, "proposal");
 
                     return (
                       <View
@@ -1104,7 +1138,7 @@ export default function AccountScreen() {
 
                         {note ? <TText style={{ marginTop: 6 }}>{note}</TText> : null}
 
-                        {it.resolution_note ? <TText muted style={{ marginTop: 6 }}>{it.resolution_note}</TText> : null}
+                        {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
                       </View>
                     );
                   })}
