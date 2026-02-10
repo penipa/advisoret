@@ -76,9 +76,9 @@ function fmtDateTime(iso: string) {
 }
 
 function statusLabel(s: "pending" | "approved" | "rejected") {
-  if (s === "approved") return "Aprobado";
-  if (s === "rejected") return "Rechazado";
-  return "Pendiente";
+  if (s === "approved") return i18n.t("account.status.approved");
+  if (s === "rejected") return i18n.t("account.status.rejected");
+  return i18n.t("account.status.pending");
 }
 
 function shortId(id?: string | null) {
@@ -230,9 +230,9 @@ export default function AccountScreen() {
       profile?.display_name ||
       (profile?.username ? `@${profile.username}` : null) ||
       session.user.email ||
-      "Usuario"
+      t("account.userFallback")
     );
-  }, [session, profile]);
+  }, [session, profile, t]);
 
   const adminUserLabel = useCallback(
     (userId?: string | null) => {
@@ -258,10 +258,10 @@ export default function AccountScreen() {
           await supabase.auth.updateUser({ data: { lang } });
         }
       } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "No se pudo cambiar el idioma.");
+        Alert.alert(t("common.error"), e?.message ?? t("account.errors.changeLanguage"));
       }
     },
-    [session]
+    [session, t]
   );
 
   const changeAccount = async () => {
@@ -269,7 +269,7 @@ export default function AccountScreen() {
       await supabase.auth.signOut();
       router.replace("/auth");
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "No se pudo cambiar de cuenta.");
+      Alert.alert(t("common.error"), e?.message ?? t("account.errors.changeAccount"));
     }
   };
 
@@ -278,7 +278,7 @@ export default function AccountScreen() {
       await supabase.auth.signOut();
       router.replace("/auth");
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "No se pudo cerrar sesión.");
+      Alert.alert(t("common.error"), e?.message ?? t("account.errors.logout"));
     }
   };
 
@@ -336,11 +336,11 @@ export default function AccountScreen() {
       setReports((r.data ?? []) as any);
     } catch (e: any) {
       setReports([]);
-      setReportsError(e?.message ?? "No se pudieron cargar los reportes.");
+      setReportsError(e?.message ?? t("account.errors.loadReports"));
     } finally {
       setReportsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const uid = session?.user?.id;
@@ -409,12 +409,12 @@ export default function AccountScreen() {
         }
       } catch (e: any) {
         setAdminRows([]);
-        setAdminError(e?.message ?? "No se pudieron cargar los reportes (admin).");
+        setAdminError(e?.message ?? t("account.errors.loadAdminReports"));
       } finally {
         setAdminLoading(false);
       }
     },
-    [isAdmin, mergeProfiles, session?.user?.id]
+    [isAdmin, mergeProfiles, session?.user?.id, t]
   );
 
   useEffect(() => {
@@ -440,7 +440,7 @@ export default function AccountScreen() {
           const u = await supabase.from("venue_suggestions").update(payload).eq("id", row.id);
 
           if (u.error) {
-            Alert.alert("Error", u.error.message);
+            Alert.alert(t("common.error"), u.error.message);
             return;
           }
 
@@ -448,24 +448,24 @@ export default function AccountScreen() {
           await loadReports(reviewerId);
           await loadPendingCounts();
 
-          Alert.alert("OK", `Marcado como ${statusLabel(status)}.`);
+          Alert.alert(t("account.okTitle"), t("account.reviewSuggestion.markedAs", { status: statusLabel(status) }));
         } catch (e: any) {
-          Alert.alert("Error", e?.message ?? "No se pudo actualizar el reporte.");
+          Alert.alert(t("common.error"), e?.message ?? t("account.errors.updateSuggestion"));
         }
       };
 
       const defaultNote =
         status === "approved"
-          ? "Revisado: se acepta el reporte."
-          : "Revisado: no se aplica ningún cambio.";
+          ? t("account.reviewSuggestion.defaultNoteApproved")
+          : t("account.reviewSuggestion.defaultNoteRejected");
 
       if (Platform.OS === "ios" && (Alert as any).prompt) {
         (Alert as any).prompt(
-          status === "approved" ? "Aprobar reporte" : "Rechazar reporte",
-          "Nota de resolución (opcional).",
+          status === "approved" ? t("account.reviewSuggestion.approveTitle") : t("account.reviewSuggestion.rejectTitle"),
+          t("account.reviewSuggestion.resolutionNoteOptional"),
           [
-            { text: "Cancelar", style: "cancel" },
-            { text: "Guardar", onPress: (val: string) => void doUpdate((val ?? "").trim() || defaultNote) },
+            { text: t("common.cancel"), style: "cancel" },
+            { text: t("common.save"), onPress: (val: string) => void doUpdate((val ?? "").trim() || defaultNote) },
           ],
           "plain-text",
           defaultNote
@@ -474,16 +474,16 @@ export default function AccountScreen() {
       }
 
       Alert.alert(
-        status === "approved" ? "Aprobar reporte" : "Rechazar reporte",
+        status === "approved" ? t("account.reviewSuggestion.approveTitle") : t("account.reviewSuggestion.rejectTitle"),
         defaultNote,
         [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Confirmar", onPress: () => void doUpdate(defaultNote) },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.confirm"), onPress: () => void doUpdate(defaultNote) },
         ],
         { cancelable: true }
       );
     },
-    [adminTab, loadAdminReports, loadPendingCounts, loadReports, session?.user?.id]
+    [adminTab, loadAdminReports, loadPendingCounts, loadReports, session?.user?.id, t]
   );
 
   // -----------------------------
@@ -511,11 +511,11 @@ export default function AccountScreen() {
       setMyProposals((r.data ?? []) as any);
     } catch (e: any) {
       setMyProposals([]);
-      setMyProposalsError(e?.message ?? "No se pudieron cargar las propuestas.");
+      setMyProposalsError(e?.message ?? t("account.errors.loadProposals"));
     } finally {
       setMyProposalsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const uid = session?.user?.id;
@@ -580,12 +580,12 @@ export default function AccountScreen() {
         }
       } catch (e: any) {
         setAdminProposals([]);
-        setAdminProposalsError(e?.message ?? "No se pudieron cargar las propuestas (admin).");
+        setAdminProposalsError(e?.message ?? t("account.errors.loadAdminProposals"));
       } finally {
         setAdminProposalsLoading(false);
       }
     },
-    [isAdmin, mergeProfiles, session?.user?.id]
+    [isAdmin, mergeProfiles, session?.user?.id, t]
   );
 
   useEffect(() => {
@@ -612,24 +612,24 @@ export default function AccountScreen() {
           await loadMyProposals(reviewerId);
           await loadPendingCounts();
 
-          Alert.alert("OK", `Marcado como ${statusLabel(status)}.`);
+          Alert.alert(t("account.okTitle"), t("account.reviewProposal.markedAs", { status: statusLabel(status) }));
         } catch (e: any) {
-          Alert.alert("Error", e?.message ?? "No se pudo actualizar la propuesta.");
+          Alert.alert(t("common.error"), e?.message ?? t("account.errors.updateProposal"));
         }
       };
 
       const defaultNote =
         status === "approved"
-          ? "Revisado: se acepta la propuesta."
-          : "Revisado: no se añade el local.";
+          ? t("account.reviewProposal.defaultNoteApproved")
+          : t("account.reviewProposal.defaultNoteRejected");
 
       if (Platform.OS === "ios" && (Alert as any).prompt) {
         (Alert as any).prompt(
-          status === "approved" ? "Aprobar propuesta" : "Rechazar propuesta",
-          "Nota de resolución (opcional).",
+          status === "approved" ? t("account.reviewProposal.approveTitle") : t("account.reviewProposal.rejectTitle"),
+          t("account.reviewProposal.resolutionNoteOptional"),
           [
-            { text: "Cancelar", style: "cancel" },
-            { text: "Guardar", onPress: (val: string) => void doUpdate((val ?? "").trim() || defaultNote) },
+            { text: t("common.cancel"), style: "cancel" },
+            { text: t("common.save"), onPress: (val: string) => void doUpdate((val ?? "").trim() || defaultNote) },
           ],
           "plain-text",
           defaultNote
@@ -638,16 +638,16 @@ export default function AccountScreen() {
       }
 
       Alert.alert(
-        status === "approved" ? "Aprobar propuesta" : "Rechazar propuesta",
+        status === "approved" ? t("account.reviewProposal.approveTitle") : t("account.reviewProposal.rejectTitle"),
         defaultNote,
         [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Confirmar", onPress: () => void doUpdate(defaultNote) },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.confirm"), onPress: () => void doUpdate(defaultNote) },
         ],
         { cancelable: true }
       );
     },
-    [adminProposalsTab, loadAdminProposals, loadMyProposals, loadPendingCounts, session?.user?.id]
+    [adminProposalsTab, loadAdminProposals, loadMyProposals, loadPendingCounts, session?.user?.id, t]
   );
 
   const initial = (who ?? "U").trim().slice(0, 1).toUpperCase();
@@ -659,8 +659,8 @@ export default function AccountScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
         <BrandLockup
-          title={session ? (who ?? "Cuenta") : "Cuenta"}
-          subtitle="Cuenta"
+          title={session ? (who ?? t("account.title")) : t("account.title")}
+          subtitle={t("account.subtitle")}
           iconSource={BRAND_A}
           style={{ marginBottom: theme.spacing.lg + 6 }}
         />
@@ -678,7 +678,7 @@ export default function AccountScreen() {
               }}
             >
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <TText weight="800">Revisiones pendientes</TText>
+                <TText weight="800">{t("account.pendingReviews")}</TText>
                 <View
                   style={{
                     paddingHorizontal: 10,
@@ -697,9 +697,9 @@ export default function AccountScreen() {
               </View>
 
               <TText muted size={12} style={{ marginTop: 6 }}>
-                {pendingCounts.suggestions ? `${pendingCounts.suggestions} reportes` : "0 reportes"}
+                {t("account.pendingReports", { count: pendingCounts.suggestions ?? 0 })}
                 {" · "}
-                {pendingCounts.proposals ? `${pendingCounts.proposals} altas` : "0 altas"}
+                {t("account.pendingProposals", { count: pendingCounts.proposals ?? 0 })}
               </TText>
             </View>
           </View>
@@ -708,16 +708,16 @@ export default function AccountScreen() {
         <TCard>
           {boot ? (
             <>
-              <TText weight="800">Cargando…</TText>
-              <TText muted style={{ marginTop: 6 }}>Comprobando tu sesión.</TText>
+              <TText weight="800">{t("common.loading")}</TText>
+              <TText muted style={{ marginTop: 6 }}>{t("account.checkingSession")}</TText>
             </>
           ) : !session ? (
             <>
-              <TText weight="800">No has iniciado sesión</TText>
-              <TText muted style={{ marginTop: 6 }}>Entra con tu email y un código de acceso.</TText>
+              <TText weight="800">{t("account.notSignedIn")}</TText>
+              <TText muted style={{ marginTop: 6 }}>{t("account.signInHint")}</TText>
 
               <View style={{ marginTop: 12 }}>
-                <TButton title="Iniciar sesión" onPress={goLogin} style={{ width: "100%" }} />
+                <TButton title={t("account.signIn")} onPress={goLogin} style={{ width: "100%" }} />
               </View>
             </>
           ) : (
@@ -743,9 +743,9 @@ export default function AccountScreen() {
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <TText weight="800">{who ?? "Usuario"}</TText>
+                  <TText weight="800">{who ?? t("account.userFallback")}</TText>
                   <TText muted style={{ marginTop: 2 }}>
-                    {profileLoading ? "Cargando perfil…" : session.user.email}
+                    {profileLoading ? t("account.loadingProfile") : session.user.email}
                   </TText>
                 </View>
               </View>
@@ -762,12 +762,12 @@ export default function AccountScreen() {
                 }}
               >
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <TText muted>Estado</TText>
-                  <TText weight="700">Conectado</TText>
+                  <TText muted>{t("account.statusLabel")}</TText>
+                  <TText weight="700">{t("account.connected")}</TText>
                 </View>
 
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <TText muted>ID</TText>
+                  <TText muted>{t("account.idLabel")}</TText>
                   <TText muted numberOfLines={1} style={{ maxWidth: 190 }}>
                     {session.user.id}
                   </TText>
@@ -824,25 +824,25 @@ export default function AccountScreen() {
         {session ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">Mis reportes</TText>
-              <TButton title="Recargar" variant="ghost" onPress={() => void loadReports(session.user.id)} />
+              <TText weight="800">{t("account.myReports")}</TText>
+              <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadReports(session.user.id)} />
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
               {reportsLoading ? (
-                <TText muted>Cargando reportes…</TText>
+                <TText muted>{t("account.loadingReports")}</TText>
               ) : reportsError ? (
                 <>
                   <TText style={{ color: theme.colors.danger }} weight="700">
-                    No se pudieron cargar
+                    {t("account.couldNotLoad")}
                   </TText>
                   <TText muted style={{ marginTop: 6 }}>{reportsError}</TText>
                 </>
               ) : reports.length === 0 ? (
                 <>
-                  <TText weight="700">Aún no has enviado reportes</TText>
+                  <TText weight="700">{t("account.noReportsYet")}</TText>
                   <TText muted style={{ marginTop: 6 }}>
-                    Desde la ficha de un local puedes “Reportar datos incorrectos”.
+                    {t("account.noReportsHint")}
                   </TText>
                 </>
               ) : (
@@ -887,7 +887,7 @@ export default function AccountScreen() {
                           </TText>
                         ) : null}
 
-                        <TText style={{ marginTop: 6 }}>{it.reason ? it.reason : "Reporte"}</TText>
+                        <TText style={{ marginTop: 6 }}>{it.reason ? it.reason : t("account.reportFallback")}</TText>
 
                         {it.resolution_note ? <TText muted style={{ marginTop: 6 }}>{it.resolution_note}</TText> : null}
                       </View>
@@ -903,8 +903,8 @@ export default function AccountScreen() {
         {session && isAdmin ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">Moderación</TText>
-              <TButton title="Recargar" variant="ghost" onPress={() => void loadAdminReports(adminTab)} />
+              <TText weight="800">{t("account.moderation")}</TText>
+              <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadAdminReports(adminTab)} />
             </View>
 
             {/* Tabs */}
@@ -922,7 +922,7 @@ export default function AccountScreen() {
                 }}
               >
                 <TText weight="800" size={12} muted>
-                  Pendientes
+                  {t("account.pendingTab")}
                 </TText>
               </Pressable>
 
@@ -939,31 +939,31 @@ export default function AccountScreen() {
                 }}
               >
                 <TText weight="800" size={12} muted>
-                  Revisados
+                  {t("account.reviewedTab")}
                 </TText>
               </Pressable>
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
               {adminLoading ? (
-                <TText muted>Cargando…</TText>
+                <TText muted>{t("common.loading")}</TText>
               ) : adminError ? (
                 <>
                   <TText style={{ color: theme.colors.danger }} weight="700">
-                    No se pudieron cargar
+                    {t("account.couldNotLoad")}
                   </TText>
                   <TText muted style={{ marginTop: 6 }}>{adminError}</TText>
                 </>
               ) : adminRows.length === 0 ? (
-                <TText muted>No hay reportes en esta bandeja.</TText>
+                <TText muted>{t("account.noReportsInTray")}</TText>
               ) : (
                 <View style={{ gap: 12 as any }}>
                   {adminRows.map((row) => {
                     const venueLabel = row.venue?.name
                       ? `${row.venue.name}${row.venue.city ? ` · ${row.venue.city}` : ""}`
                       : row.venue_id
-                        ? `Local ${shortId(row.venue_id)}`
-                        : "Local —";
+                        ? t("account.venueWithId", { id: shortId(row.venue_id) })
+                        : t("account.venueFallback");
 
                     /* <SECTION:ADMIN_SUGGESTIONS_OPEN> */
                     const openSuggestion = () => {
@@ -1006,21 +1006,21 @@ export default function AccountScreen() {
                           {venueLabel}
                         </TText>
 
-                        <TText style={{ marginTop: 6 }}>{row.reason ?? "Reporte"}</TText>
+                        <TText style={{ marginTop: 6 }}>{row.reason ?? t("account.reportFallback")}</TText>
 
                         {row.message ? <TText muted style={{ marginTop: 6 }}>{row.message}</TText> : null}
 
                         {/* <SECTION:ADMIN_SUGGESTIONS_ACTIONS> */}
                         {row.status === "pending" ? (
                           <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
-                            <TButton title="Abrir" variant="ghost" onPress={openSuggestion} />
-                            <TButton title="Aprobar" variant="ghost" onPress={() => void reviewSuggestion(row, "approved")} />
-                            <TButton title="Rechazar" onPress={() => void reviewSuggestion(row, "rejected")} />
+                            <TButton title={t("account.open")} variant="ghost" onPress={openSuggestion} />
+                            <TButton title={t("account.approve")} variant="ghost" onPress={() => void reviewSuggestion(row, "approved")} />
+                            <TButton title={t("account.reject")} onPress={() => void reviewSuggestion(row, "rejected")} />
                           </View>
                         ) : (
                           <>
                             <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
-                              <TButton title="Abrir" variant="ghost" onPress={openSuggestion} />
+                              <TButton title={t("account.open")} variant="ghost" onPress={openSuggestion} />
                             </View>
                             {row.resolution_note ? <TText muted style={{ marginTop: 8 }}>{row.resolution_note}</TText> : null}
                           </>
@@ -1039,31 +1039,31 @@ export default function AccountScreen() {
         {session ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">Mis propuestas</TText>
-              <TButton title="Recargar" variant="ghost" onPress={() => void loadMyProposals(session.user.id)} />
+              <TText weight="800">{t("account.myProposals")}</TText>
+              <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadMyProposals(session.user.id)} />
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
               {myProposalsLoading ? (
-                <TText muted>Cargando propuestas…</TText>
+                <TText muted>{t("account.loadingProposals")}</TText>
               ) : myProposalsError ? (
                 <>
                   <TText style={{ color: theme.colors.danger }} weight="700">
-                    No se pudieron cargar
+                    {t("account.couldNotLoad")}
                   </TText>
                   <TText muted style={{ marginTop: 6 }}>{myProposalsError}</TText>
                 </>
               ) : myProposals.length === 0 ? (
                 <>
-                  <TText weight="700">Aún no has enviado propuestas</TText>
+                  <TText weight="700">{t("account.noProposalsYet")}</TText>
                   <TText muted style={{ marginTop: 6 }}>
-                    Desde “Proponer local” puedes sugerir un sitio que no esté en la base de datos.
+                    {t("account.noProposalsHint")}
                   </TText>
                 </>
               ) : (
                 <View style={{ gap: 10 as any }}>
                   {myProposals.map((it) => {
-                    const title = (it.name ?? "Propuesta").trim();
+                    const title = (it.name ?? t("account.proposalFallback")).trim();
                     const line2 = [it.city, it.address_text].filter(Boolean).join(" · ");
                     const note = (it.notes ?? it.message ?? "").trim();
 
@@ -1118,8 +1118,8 @@ export default function AccountScreen() {
         {session && isAdmin ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">Moderación · Altas</TText>
-              <TButton title="Recargar" variant="ghost" onPress={() => void loadAdminProposals(adminProposalsTab)} />
+              <TText weight="800">{t("account.moderationProposals")}</TText>
+              <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadAdminProposals(adminProposalsTab)} />
             </View>
 
             {/* Tabs */}
@@ -1137,7 +1137,7 @@ export default function AccountScreen() {
                 }}
               >
                 <TText weight="800" size={12} muted>
-                  Pendientes
+                  {t("account.pendingTab")}
                 </TText>
               </Pressable>
 
@@ -1154,28 +1154,28 @@ export default function AccountScreen() {
                 }}
               >
                 <TText weight="800" size={12} muted>
-                  Revisadas
+                  {t("account.reviewedTabProposals")}
                 </TText>
               </Pressable>
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
               {adminProposalsLoading ? (
-                <TText muted>Cargando…</TText>
+                <TText muted>{t("common.loading")}</TText>
               ) : adminProposalsError ? (
                 <>
                   <TText style={{ color: theme.colors.danger }} weight="700">
-                    No se pudieron cargar
+                    {t("account.couldNotLoad")}
                   </TText>
                   <TText muted style={{ marginTop: 6 }}>{adminProposalsError}</TText>
                 </>
               ) : adminProposals.length === 0 ? (
-                <TText muted>No hay propuestas en esta bandeja.</TText>
+                <TText muted>{t("account.noProposalsInTray")}</TText>
               ) : (
                 <View style={{ gap: 12 as any }}>
                   {/* <SECTION:ADMIN_PROPOSALS_LIST_ROWS> */}
                   {adminProposals.map((row) => {
-                    const title = (row.name ?? "Propuesta").trim();
+                    const title = (row.name ?? t("account.proposalFallback")).trim();
                     const line2 = [row.city, row.address_text].filter(Boolean).join(" · ");
                     const note = (row.notes ?? row.message ?? "").trim();
 
@@ -1225,9 +1225,9 @@ export default function AccountScreen() {
 
                         {row.status === "pending" ? (
                           <View style={{ flexDirection: "row", gap: 10 as any, marginTop: 10, flexWrap: "wrap" }}>
-                            <TButton title="Abrir" variant="ghost" onPress={open} />
-                            <TButton title="Aprobar" variant="ghost" onPress={() => void reviewProposal(row, "approved")} />
-                            <TButton title="Rechazar" onPress={() => void reviewProposal(row, "rejected")} />
+                            <TButton title={t("account.open")} variant="ghost" onPress={open} />
+                            <TButton title={t("account.approve")} variant="ghost" onPress={() => void reviewProposal(row, "approved")} />
+                            <TButton title={t("account.reject")} onPress={() => void reviewProposal(row, "rejected")} />
                           </View>
                         ) : row.resolution_note ? (
                           <TText muted style={{ marginTop: 8 }}>{row.resolution_note}</TText>
@@ -1245,7 +1245,7 @@ export default function AccountScreen() {
         {/* Micro tip */}
         <View style={{ marginTop: theme.spacing.md }}>
           <TText muted style={{ textAlign: "center" }}>
-            Consejo: si cambias de cuenta, volverás a la pantalla de acceso.
+            {t("account.changeAccountTip")}
           </TText>
         </View>
       </ScrollView>
