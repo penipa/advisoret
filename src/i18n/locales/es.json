@@ -203,6 +203,11 @@
       "mine": "Mis valoraciones"
     }
   },
+  "featured": {
+    "tags": {
+      "recommended": "RECOMENDADO"
+    }
+  },
   "rate": {
     "title": "Valorar",
     "titleEdit": "Editar valoración",

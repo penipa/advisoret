@@ -740,7 +740,7 @@ const loadFeatured = async () => {
   try {
     const fv = await supabase
       .from("featured_venues")
-      .select("venue_id,priority,start_at,label")
+      .select("venue_id,priority,start_at,label,tag")
       .order("priority", { ascending: false })
       .order("start_at", { ascending: false })
       .limit(2);
@@ -756,10 +756,13 @@ const loadFeatured = async () => {
     }
 
     const labelById = new Map<string, string | null>();
+    const tagById = new Map<string, string | null>();
     for (const x of featured) {
       const id = String(x.venue_id);
       const label = typeof x.label === "string" ? x.label : null;
+      const tag = typeof x.tag === "string" ? x.tag : null;
       if (id) labelById.set(id, label);
+      if (id) tagById.set(id, tag);
     }
 
     const v = await supabase
@@ -806,6 +809,7 @@ const loadFeatured = async () => {
           ratings_count: st?.ratings_count ?? 0,
           featured_label: null,
           label: labelById.get(id) ?? null,
+          tag: tagById.get(id) ?? null,
         } as NewVenue;
       })
       .filter(Boolean) as NewVenue[];
@@ -1160,13 +1164,13 @@ return (
                     v={v}
                     cacheBust={coverBust}
                     onPress={() => goVenue(v.id)}
-                    badgeText={
-                      typeof (v as any)?.featured_label === "string"
-                        ? (v as any).featured_label
-                        : typeof (v as any)?.label === "string"
-                          ? (v as any).label
-                          : null
-                    }
+                    badgeText={(() => {
+                      const tag = typeof (v as any)?.tag === "string" ? (v as any).tag.trim().toLowerCase() : "";
+                      const label = typeof (v as any)?.label === "string" ? (v as any).label.trim() : "";
+                      if (tag === "recommended") return t("featured.tags.recommended");
+                      if (tag !== "") return label || tag;
+                      return label || null;
+                    })()}
                   />
                 ))}
               </ScrollView>

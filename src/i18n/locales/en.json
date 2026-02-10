@@ -203,6 +203,11 @@
       "mine": "My ratings"
     }
   },
+  "featured": {
+    "tags": {
+      "recommended": "RECOMMENDED"
+    }
+  },
   "rate": {
     "title": "Rate",
     "titleEdit": "Edit rating",
