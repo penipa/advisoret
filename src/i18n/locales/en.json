@@ -137,6 +137,10 @@
     "myReports": "My reports",
     "expand": "Show",
     "collapse": "Hide",
+    "history": {
+      "view": "View history ({{count}})",
+      "hide": "Hide"
+    },
     "loadingReports": "Loading reports…",
     "couldNotLoad": "Could not load",
     "noReportsYet": "You have not sent reports yet",

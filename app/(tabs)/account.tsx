@@ -928,7 +928,9 @@ export default function AccountScreen() {
                   }}
                 >
                   <TText size={12} weight="800">
-                    {reportsOpen ? t("account.collapse") : t("account.expand")}
+                    {reportsOpen
+                      ? t("account.history.hide")
+                      : t("account.history.view", { count: reports.length })}
                   </TText>
                   <TText size={12} weight="800" muted>
                     {reportsOpen ? "▾" : "▸"}
@@ -1204,7 +1206,9 @@ export default function AccountScreen() {
                   }}
                 >
                   <TText size={12} weight="800">
-                    {proposalsOpen ? t("account.collapse") : t("account.expand")}
+                    {proposalsOpen
+                      ? t("account.history.hide")
+                      : t("account.history.view", { count: myProposals.length })}
                   </TText>
                   <TText size={12} weight="800" muted>
                     {proposalsOpen ? "▾" : "▸"}
