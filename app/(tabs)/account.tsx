@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { SafeAreaView, View, Alert, ScrollView, Pressable, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
+import i18n from "../../src/i18n";
 
 import { supabase } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
@@ -59,7 +62,8 @@ type VenueProposalRow = {
 
 function fmtDateTime(iso: string) {
   try {
-    return new Date(iso).toLocaleString("es-ES", {
+    const locale = i18n.language === "en" ? "en-US" : "es-ES";
+    return new Date(iso).toLocaleString(locale, {
       year: "numeric",
       month: "short",
       day: "2-digit",
@@ -85,6 +89,7 @@ function shortId(id?: string | null) {
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [boot, setBoot] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
@@ -241,6 +246,23 @@ export default function AccountScreen() {
   );
 
   const goLogin = () => router.replace("/auth");
+
+  const applyLanguage = useCallback(
+    async (lang: "es" | "en") => {
+      try {
+        if (i18n.language !== lang) {
+          await i18n.changeLanguage(lang);
+        }
+        await AsyncStorage.setItem("lang", lang);
+        if (session) {
+          await supabase.auth.updateUser({ data: { lang } });
+        }
+      } catch (e: any) {
+        Alert.alert("Error", e?.message ?? "No se pudo cambiar el idioma.");
+      }
+    },
+    [session]
+  );
 
   const changeAccount = async () => {
     try {
@@ -761,6 +783,38 @@ export default function AccountScreen() {
                   style={{ width: "100%" }}
                 />
                 <TButton title="Cerrar sesión" onPress={() => void logout()} style={{ width: "100%" }} />
+              </View>
+
+              <View style={{ marginTop: 14, gap: 8 as any }}>
+                <TText muted>{t("account.language")}</TText>
+                <View style={{ flexDirection: "row", gap: 10 as any }}>
+                  <Pressable
+                    onPress={() => void applyLanguage("es")}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                      backgroundColor: i18n.language === "es" ? theme.colors.surface2 : "transparent",
+                    }}
+                  >
+                    <TText weight="700">{t("languages.es")}</TText>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => void applyLanguage("en")}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                      backgroundColor: i18n.language === "en" ? theme.colors.surface2 : "transparent",
+                    }}
+                  >
+                    <TText weight="700">{t("languages.en")}</TText>
+                  </Pressable>
+                </View>
               </View>
             </>
           )}
