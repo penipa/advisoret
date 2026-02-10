@@ -61,6 +61,19 @@
         "passwordMinLength": "Enter your password (minimum 6 characters).",
         "invalidCredentials": "Incorrect email or password."
       }
+    },
+    "paste": {
+      "linkLabel": "Link",
+      "linkPlaceholder": "Paste the full email link here…",
+      "success": {
+        "sessionStarted": "Session started ✅"
+      },
+      "errors": {
+        "invalidUrl": "The pasted text does not look like a valid URL. Paste the full link from the email.",
+        "tokenMissing": "I cannot find 'token' in the link. Paste the full link from the email.",
+        "emailRequiredFallback": "I could not validate the link directly. Add your email above and try again.",
+        "verifyFailed": "I could not validate the link. ({{message}})"
+      }
     }
   },
   "account": {

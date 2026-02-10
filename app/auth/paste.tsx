@@ -59,12 +59,12 @@ export default function PasteLinkScreen() {
       token = parsed.token;
       type = parsed.type ?? "magiclink";
     } catch {
-      setErr("El texto pegado no parece una URL válida. Pega el link completo del email.");
+      setErr(t("auth.paste.errors.invalidUrl"));
       return;
     }
 
     if (!token) {
-      setErr("No encuentro 'token' en el enlace. Pega el link completo del email.");
+      setErr(t("auth.paste.errors.tokenMissing"));
       return;
     }
 
@@ -77,7 +77,7 @@ export default function PasteLinkScreen() {
 
     if (!attempt1.error) {
       setLoading(false);
-      setMsg("Sesión iniciada ✅");
+      setMsg(t("auth.paste.success.sessionStarted"));
       router.replace("/(tabs)");
       return;
     }
@@ -85,7 +85,7 @@ export default function PasteLinkScreen() {
     const e = email.trim().toLowerCase();
     if (!e || !e.includes("@")) {
       setLoading(false);
-      setErr("No he podido validar el enlace directamente. Añade tu email arriba y vuelve a probar.");
+      setErr(t("auth.paste.errors.emailRequiredFallback"));
       return;
     }
 
@@ -98,11 +98,11 @@ export default function PasteLinkScreen() {
     setLoading(false);
 
     if (attempt2.error) {
-      setErr(`No he podido validar el enlace. (${attempt1.error.message})`);
+      setErr(t("auth.paste.errors.verifyFailed", { message: attempt1.error.message }));
       return;
     }
 
-    setMsg("Sesión iniciada ✅");
+    setMsg(t("auth.paste.success.sessionStarted"));
     router.replace("/(tabs)");
   };
 
@@ -162,13 +162,13 @@ export default function PasteLinkScreen() {
 
             <View style={{ height: theme.spacing.md }} />
 
-            <TText weight="700">Enlace</TText>
+            <TText weight="700">{t("auth.paste.linkLabel")}</TText>
             <TextInput
               value={raw}
               onChangeText={setRaw}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="Pega aquí el link completo del email…"
+              placeholder={t("auth.paste.linkPlaceholder")}
               placeholderTextColor={theme.colors.textMuted}
               multiline
               textAlignVertical="top"

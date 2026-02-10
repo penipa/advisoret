@@ -61,6 +61,19 @@
         "passwordMinLength": "Pon tu contraseña (mínimo 6 caracteres).",
         "invalidCredentials": "Email o contraseña incorrectos."
       }
+    },
+    "paste": {
+      "linkLabel": "Enlace",
+      "linkPlaceholder": "Pega aquí el link completo del email…",
+      "success": {
+        "sessionStarted": "Sesión iniciada ✅"
+      },
+      "errors": {
+        "invalidUrl": "El texto pegado no parece una URL válida. Pega el link completo del email.",
+        "tokenMissing": "No encuentro 'token' en el enlace. Pega el link completo del email.",
+        "emailRequiredFallback": "No he podido validar el enlace directamente. Añade tu email arriba y vuelve a probar.",
+        "verifyFailed": "No he podido validar el enlace. ({{message}})"
+      }
     }
   },
   "account": {
