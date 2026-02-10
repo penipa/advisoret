@@ -346,6 +346,13 @@
       "tryAgain": "Inténtalo de nuevo."
     }
   },
+  "follows": {
+    "title": "Seguidos",
+    "following": "Siguiendo",
+    "followers": "Seguidores",
+    "emptyFollowing": "Aún no sigues a nadie",
+    "emptyFollowers": "Aún no tienes seguidores"
+  },
   "venueSuggest": {
     "title": "Proponer local",
     "subtitle": "Si no existe en la app, envíanos los datos y lo revisaremos.",

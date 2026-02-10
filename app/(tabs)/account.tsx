@@ -828,6 +828,23 @@ export default function AccountScreen() {
 
               {/* Acciones */}
               <View style={{ marginTop: 14, gap: 10 as any }}>
+                <Pressable
+                  onPress={() => router.push("/follows" as any)}
+                  style={{
+                    width: "100%",
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    borderRadius: theme.radius.lg,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <TText weight="700">{t("follows.title")}</TText>
+                  <TText muted>›</TText>
+                </Pressable>
                 <TButton
                   title={t("account.changeAccount")}
                   variant="ghost"

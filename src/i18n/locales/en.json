@@ -346,6 +346,13 @@
       "tryAgain": "Please try again."
     }
   },
+  "follows": {
+    "title": "Follows",
+    "following": "Following",
+    "followers": "Followers",
+    "emptyFollowing": "You are not following anyone yet",
+    "emptyFollowers": "You don't have followers yet"
+  },
   "venueSuggest": {
     "title": "Suggest place",
     "subtitle": "If it does not exist in the app, send us the data and we will review it.",
