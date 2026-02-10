@@ -60,6 +60,46 @@
     "noResults": "No results.",
     "endResults": "End of results"
   },
+  "home": {
+    "brandTitle": "Advisoret",
+    "brandSubtitle": "Esmorzarets",
+    "proposeVenue": "+ Suggest place",
+    "featured": "Featured",
+    "noFeaturedActive": "There are no active featured places yet.",
+    "bestLastMonth": "Best of last month",
+    "viewAll": "View all",
+    "monthPastSubtitle": "{{city}} · Last month {{score}} ({{count}})",
+    "monthBadge": "MONTH",
+    "bestAllTime": "Best of all time",
+    "nearYou": "Near you",
+    "refresh": "Refresh",
+    "enableLocation": "Enable location to see nearby places.",
+    "noNearbyWithCoords": "There are no places with sufficient nearby coordinates yet.",
+    "newPlaces": "New",
+    "noNewPlaces": "There are no new places yet.",
+    "searchPlaceholder": "Search place, city or address…",
+    "removeFilter": "Remove filter",
+    "chooseCityToFilter": "Choose a city to filter.",
+    "noResults": "No results.",
+    "beFirstToRate": "Be the first to rate",
+    "nearbyAlertTitle": "Near you",
+    "nearbyLoadError": "Could not load location.",
+    "reviews": {
+      "none": "No reviews",
+      "one": "1 review",
+      "many": "{{count}} reviews"
+    },
+    "units": {
+      "m": "m",
+      "km": "km"
+    },
+    "chips": {
+      "all": "All",
+      "city": "📍 City",
+      "following": "Following",
+      "mine": "My ratings"
+    }
+  },
   "rankings": {
     "monthTag": "Ranking - Month",
     "allTag": "Ranking - All time",

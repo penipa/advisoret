@@ -60,6 +60,46 @@
     "noResults": "Sin resultados.",
     "endResults": "Fin de resultados"
   },
+  "home": {
+    "brandTitle": "Advisoret",
+    "brandSubtitle": "Esmorzarets",
+    "proposeVenue": "+ Proponer local",
+    "featured": "Destacados",
+    "noFeaturedActive": "Aún no hay destacados activos.",
+    "bestLastMonth": "Mejor del mes pasado",
+    "viewAll": "Ver todos",
+    "monthPastSubtitle": "{{city}} · Mes pasado {{score}} ({{count}})",
+    "monthBadge": "MES",
+    "bestAllTime": "Mejores de siempre",
+    "nearYou": "Cerca de ti",
+    "refresh": "Actualizar",
+    "enableLocation": "Activa la ubicación para ver los locales cercanos.",
+    "noNearbyWithCoords": "No hay locales con coordenadas suficientes cerca (aún).",
+    "newPlaces": "Nuevos",
+    "noNewPlaces": "Aún no hay nuevos locales.",
+    "searchPlaceholder": "Buscar local, ciudad o dirección…",
+    "removeFilter": "Quitar filtro",
+    "chooseCityToFilter": "Elige una localidad para filtrar.",
+    "noResults": "Sin resultados.",
+    "beFirstToRate": "Sé el primero en valorar",
+    "nearbyAlertTitle": "Cerca de ti",
+    "nearbyLoadError": "No se pudo cargar la ubicación.",
+    "reviews": {
+      "none": "Sin reseñas",
+      "one": "1 reseña",
+      "many": "{{count}} reseñas"
+    },
+    "units": {
+      "m": "m",
+      "km": "km"
+    },
+    "chips": {
+      "all": "Todo",
+      "city": "📍 Localidad",
+      "following": "Siguiendo",
+      "mine": "Mis valoraciones"
+    }
+  },
   "rankings": {
     "monthTag": "Ranking - Mes",
     "allTag": "Ranking - Siempre",

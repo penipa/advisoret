@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
+import { useTranslation } from "react-i18next";
 
 import { supabase, venueCoverUrl } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
@@ -21,6 +22,7 @@ import { BrandLockup } from "../../src/ui/BrandLockup";
 import { TCard, TSkeletonBox, TSkeletonLine } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
+import i18n from "../../src/i18n";
 // </SECTION:IMPORTS>
 
 // <SECTION:ASSETS>
@@ -98,16 +100,16 @@ type AwardFilter = "all" | "awarded" | "no_award";
 
 // <SECTION:HELPERS_TEXT_FORMAT>
 function reviewsLabel(n: number) {
-  if (!n || n <= 0) return "Sin reseñas";
-  if (n === 1) return "1 reseña";
-  return String(n) + " reseñas";
+  if (!n || n <= 0) return i18n.t("home.reviews.none");
+  if (n === 1) return i18n.t("home.reviews.one");
+  return i18n.t("home.reviews.many", { count: n });
 }
 
 function fmtKm(km: number) {
   if (!isFinite(km)) return "";
-  if (km < 1) return String(Math.round(km * 1000)) + " m";
-  if (km < 10) return km.toFixed(1) + " km";
-  return String(Math.round(km)) + " km";
+  if (km < 1) return String(Math.round(km * 1000)) + " " + i18n.t("home.units.m");
+  if (km < 10) return km.toFixed(1) + " " + i18n.t("home.units.km");
+  return String(Math.round(km)) + " " + i18n.t("home.units.km");
 }
 // </SECTION:HELPERS_TEXT_FORMAT>
 
@@ -414,7 +416,7 @@ function NewVenueCard({
                 }}
               >
                 <TText size={12} weight="800" style={{ color: theme.colors.text }}>
-                  NUEVO
+                  {i18n.t("common.new")}
                 </TText>
               </View>
             )}
@@ -457,7 +459,7 @@ function NewVenueCard({
             }}
             numberOfLines={1}
           >
-            Sé el primero en valorar
+            {i18n.t("home.beFirstToRate")}
           </TText>
         </View>
       </TCard>
@@ -530,7 +532,7 @@ function NearVenueCard({
                 }}
               >
                 <TText size={12} weight="800" style={{ color: theme.colors.text }}>
-                  NUEVO
+                  {i18n.t("common.new")}
                 </TText>
               </View>
             )}
@@ -561,7 +563,7 @@ function NearVenueCard({
             }}
             numberOfLines={1}
           >
-            Sé el primero en valorar
+            {i18n.t("home.beFirstToRate")}
           </TText>
         </View>
       </TCard>
@@ -595,6 +597,7 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
 export default function HomeScreen() {
 // <SECTION:SCREEN_INIT>
 const router = useRouter();
+const { t } = useTranslation();
 
 // Home es escaparate: la búsqueda vive en la pestaña "Explorar"
 const SHOW_HOME_EXPLORE_ENTRY = false;
@@ -952,7 +955,7 @@ const loadNew = async () => {
     } catch (e: any) {
       setNearRows([]);
       // No hacemos Alert siempre (molesta), pero en dev sí ayuda
-      if (__DEV__) Alert.alert("Cerca de ti", e?.message ?? "No se pudo cargar la ubicación.");
+      if (__DEV__) Alert.alert(t("home.nearbyAlertTitle"), e?.message ?? t("home.nearbyLoadError"));
     } finally {
       setNearLoading(false);
     }
@@ -1084,8 +1087,8 @@ const loadNew = async () => {
   }, [loadExplore]);
 
   const chipLabelCity = useMemo(() => {
-    return selectedCity ? "📍 " + selectedCity : "📍 Localidad";
-  }, [selectedCity]);
+    return selectedCity ? "📍 " + selectedCity : t("home.chips.city");
+  }, [selectedCity, t]);
   // </SECTION:EXPLORE_LOGIC>
 
 // <SECTION:FOCUS_EFFECT>
@@ -1111,15 +1114,15 @@ return (
     <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
       {/* <SECTION:HOME_HEADER> */}
       <BrandLockup
-        title="Advisoret"
-        subtitle="Esmorzarets"
+        title={t("home.brandTitle")}
+        subtitle={t("home.brandSubtitle")}
         iconSource={BRAND_A}
         style={{ marginBottom: theme.spacing.md }}
       />
 
       <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: theme.spacing.lg + 6 }}>
         <TButton
-          title="+ Proponer local"
+          title={t("home.proposeVenue")}
           variant="ghost"
           style={{ paddingHorizontal: 12, paddingVertical: 8, alignSelf: "flex-start" }}
           onPress={() => router.push("/venue/suggest")}
@@ -1129,7 +1132,7 @@ return (
 
       {error && (
         <TText style={{ color: theme.colors.danger, marginBottom: theme.spacing.md }}>
-          Error: {error}
+          {t("common.error")}: {error}
         </TText>
       )}
 
@@ -1140,7 +1143,7 @@ return (
           <View style={{ marginBottom: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <TText size={theme.font.h2} weight="700">
-                Destacados
+                {t("home.featured")}
               </TText>
             </View>
 
@@ -1169,7 +1172,7 @@ return (
               </ScrollView>
             ) : (
               <TText muted style={{ marginTop: 10 }}>
-                Aún no hay destacados activos.
+                {t("home.noFeaturedActive")}
               </TText>
             )}
           </View>
@@ -1179,10 +1182,10 @@ return (
             <>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <TText size={theme.font.h2} weight="700">
-                  Mejor del mes pasado
+                  {t("home.bestLastMonth")}
                 </TText>
                 <TButton
-                  title="Ver todos"
+                  title={t("home.viewAll")}
                   variant="ghost"
                   style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
                   onPress={() => router.push("/rankings/month")}
@@ -1201,16 +1204,15 @@ return (
                     <RankCard
                       title={r.name}
                       subtitle={
-                        (r.city ?? "") +
-                        " · Mes pasado " +
-                        Number(r.score_month ?? 0).toFixed(1) +
-                        " (" +
-                        Number(r.ratings_count_month ?? 0) +
-                        ")"
+                        t("home.monthPastSubtitle", {
+                          city: r.city ?? "",
+                          score: Number(r.score_month ?? 0).toFixed(1),
+                          count: Number(r.ratings_count_month ?? 0),
+                        })
                       }
                       score={Number(r.avg_score ?? 0)}
                       n={Number(r.ratings_count ?? 0)}
-                      badge="MES"
+                      badge={t("home.monthBadge")}
                     />
                   </Pressable>
                 ))}
@@ -1222,10 +1224,10 @@ return (
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <TText size={theme.font.h2} weight="700">
-              Mejores de siempre
+              {t("home.bestAllTime")}
             </TText>
             <TButton
-              title="Ver todos"
+              title={t("home.viewAll")}
               variant="ghost"
               style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
               onPress={() => router.push("/rankings/all")}
@@ -1257,11 +1259,11 @@ return (
           <View style={{ marginBottom: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <TText size={theme.font.h2} weight="700">
-                Cerca de ti
+                {t("home.nearYou")}
               </TText>
 
               <TButton
-                title="Actualizar"
+                title={t("home.refresh")}
                 variant="ghost"
                 onPress={() => void requestAndLoadNear()}
                 style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
@@ -1275,7 +1277,7 @@ return (
               </ScrollView>
             ) : locDenied ? (
               <TText muted style={{ marginTop: 10 }}>
-                Activa la ubicación para ver los locales cercanos.
+                {t("home.enableLocation")}
               </TText>
             ) : nearRows.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
@@ -1284,7 +1286,7 @@ return (
                 ))}
               </ScrollView>
             ) : (
-              <TText muted style={{ marginTop: 10 }}>No hay locales con coordenadas suficientes cerca (aún).</TText>
+              <TText muted style={{ marginTop: 10 }}>{t("home.noNearbyWithCoords")}</TText>
             )}
           </View>
 
@@ -1292,7 +1294,7 @@ return (
           <View style={{ marginBottom: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <TText size={theme.font.h2} weight="700">
-                Nuevos
+                {t("home.newPlaces")}
               </TText>
             </View>
 
@@ -1308,7 +1310,7 @@ return (
                 ))}
               </ScrollView>
             ) : (
-              <TText muted style={{ marginTop: 10 }}>Aún no hay nuevos locales.</TText>
+              <TText muted style={{ marginTop: 10 }}>{t("home.noNewPlaces")}</TText>
             )}
           </View>
         </>
@@ -1330,7 +1332,7 @@ return (
             <TextInput
               value={q}
               onChangeText={setQ}
-              placeholder="Buscar local, ciudad o dirección…"
+              placeholder={t("home.searchPlaceholder")}
               placeholderTextColor={theme.colors.textMuted}
               style={{ color: theme.colors.text, fontSize: 16 }}
               autoCapitalize="none"
@@ -1343,15 +1345,15 @@ return (
           </View>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 10 }}>
-            <Chip label="Todo" active={chip === "all"} onPress={() => setChip("all")} />
+            <Chip label={t("home.chips.all")} active={chip === "all"} onPress={() => setChip("all")} />
             <Chip label={chipLabelCity} active={chip === "city"} onPress={() => setChip("city")} />
-            <Chip label="Siguiendo" active={chip === "following"} onPress={() => setChip("following")} />
-            <Chip label="Mis valoraciones" active={chip === "mine"} onPress={() => setChip("mine")} />
+            <Chip label={t("home.chips.following")} active={chip === "following"} onPress={() => setChip("following")} />
+            <Chip label={t("home.chips.mine")} active={chip === "mine"} onPress={() => setChip("mine")} />
           </View>
 
           {chip === "city" && selectedCity ? (
             <TButton
-              title="Quitar filtro"
+              title={t("home.removeFilter")}
               variant="ghost"
               onPress={() => {
                 setSelectedCity(null);
@@ -1369,7 +1371,7 @@ return (
             </ScrollView>
           ) : null}
 
-          {chip === "city" && !selectedCity ? <TText muted style={{ marginTop: 8 }}>Elige una localidad para filtrar.</TText> : null}
+          {chip === "city" && !selectedCity ? <TText muted style={{ marginTop: 8 }}>{t("home.chooseCityToFilter")}</TText> : null}
 
           {exploreLoading ? (
             <View style={{ marginTop: 10 }}>
@@ -1408,7 +1410,7 @@ return (
             </View>
           ) : null}
 
-          {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? <TText muted style={{ marginTop: 10 }}>Sin resultados.</TText> : null}
+          {!exploreLoading && shouldShowExplore && exploreRows.length === 0 ? <TText muted style={{ marginTop: 10 }}>{t("home.noResults")}</TText> : null}
         </View>
       ) : null}
     </ScrollView>
