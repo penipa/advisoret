@@ -95,7 +95,7 @@ function Stepper({
 export default function RateScreen() {
   // <SECTION:SCREEN_INIT>
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -133,7 +133,12 @@ export default function RateScreen() {
 
   const isBusy = saving || editLoading;
 
-  const label = (c: Criterion) => c.name_es || c.name_en;
+  const label = (c: Criterion) => {
+    const isEn = i18n.language?.toLowerCase().startsWith("en");
+    return isEn
+      ? (c.name_en?.trim() || c.name_es)
+      : (c.name_es?.trim() || c.name_en);
+  };
   // </SECTION:STATE_CORE>
 
   // <SECTION:EFFECT_LOAD_VENUE_AND_CRITERIA>
