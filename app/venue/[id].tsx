@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import { useTranslation } from "react-i18next";
 
 import { supabase, venueCoverUrl, STORAGE_BUCKET_VENUE_PHOTOS } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
@@ -23,6 +24,7 @@ import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
 import * as ImageManipulator from "expo-image-manipulator";
 import { Buffer } from "buffer";
+import i18n from "../../src/i18n";
 
 
 // Reportes (función)
@@ -111,8 +113,9 @@ type MyVenueReport = {
 // <SECTION:HELPERS_FORMAT>
 function fmtMoney(n: number | null) {
   if (n == null) return null;
+  const locale = i18n.language === "en" ? "en-US" : "es-ES";
   try {
-    return new Intl.NumberFormat("es-ES", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "EUR",
       maximumFractionDigits: 2,
@@ -123,8 +126,9 @@ function fmtMoney(n: number | null) {
 }
 
 function fmtDate(iso: string) {
+  const locale = i18n.language === "en" ? "en-US" : "es-ES";
   try {
-    return new Date(iso).toLocaleDateString("es-ES", {
+    return new Date(iso).toLocaleDateString(locale, {
       year: "numeric",
       month: "short",
       day: "2-digit",
@@ -135,8 +139,9 @@ function fmtDate(iso: string) {
 }
 
 function fmtDateTime(iso: string) {
+  const locale = i18n.language === "en" ? "en-US" : "es-ES";
   try {
-    return new Date(iso).toLocaleString("es-ES", {
+    return new Date(iso).toLocaleString(locale, {
       year: "numeric",
       month: "short",
       day: "2-digit",
@@ -149,9 +154,9 @@ function fmtDateTime(iso: string) {
 }
 
 function reviewsLabel(n: number) {
-  if (n === 0) return "Sin reseñas";
-  if (n === 1) return "1 reseña";
-  return `${n} reseñas`;
+  if (n === 0) return i18n.t("venue.reviews.none");
+  if (n === 1) return i18n.t("venue.reviews.one");
+  return i18n.t("venue.reviews.many", { count: n });
 }
 
 function safeLatLon(lat?: number | null, lon?: number | null) {
@@ -168,6 +173,7 @@ function safeLatLon(lat?: number | null, lon?: number | null) {
 export default function VenueScreen() {
   // <SECTION:SCREEN_INIT>
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string; t?: string }>();
   const id = params.id ?? "";
 
@@ -302,7 +308,7 @@ const loadVenue = useCallback(async () => {
           ).data;
 
     if (!v) {
-      setError(vView.error?.message ?? "No se encontró el local.");
+      setError(vView.error?.message ?? t("venue.noVenueFound"));
       setVenue(null);
       setReviews([]);
       setProfiles({});
@@ -537,7 +543,7 @@ const loadReviewBreakdown = useCallback(
 
     const coords = safeLatLon(venue.lat, venue.lon);
     if (!coords) {
-      Alert.alert("No disponible", "Este local aún no tiene coordenadas.");
+      Alert.alert(t("venue.unavailableTitle"), t("venue.noCoordsYet"));
       return;
     }
 
@@ -553,8 +559,8 @@ const loadReviewBreakdown = useCallback(
     const ok = await Linking.canOpenURL(mapsUrl);
     if (ok) return Linking.openURL(mapsUrl);
 
-    Alert.alert("No disponible", "No he podido abrir mapas en este dispositivo.");
-  }, [venue]);
+    Alert.alert(t("venue.unavailableTitle"), t("venue.cannotOpenMaps"));
+  }, [venue, t]);
   // </SECTION:ACTIONS_MAPS>
 
   // <SECTION:ACTIONS_ADMIN_COVER>
@@ -570,7 +576,7 @@ const loadReviewBreakdown = useCallback(
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Permiso requerido", "Necesito acceso a tus fotos para subir la portada.");
+        Alert.alert(t("venue.permissionRequiredTitle"), t("venue.photoPermissionNeeded"));
         return;
       }
 
@@ -594,7 +600,7 @@ const loadReviewBreakdown = useCallback(
       });
 
       if (!manipulated.base64) {
-        Alert.alert("Error", "No se pudo leer la imagen (base64 vacío).");
+        Alert.alert(t("common.error"), t("venue.base64ReadError"));
         return;
       }
 
@@ -602,7 +608,7 @@ const loadReviewBreakdown = useCallback(
 
       // Sanity check: nunca subir 0 bytes
       if (bytes.length === 0) {
-        Alert.alert("Error", "Imagen vacía (0 bytes). No se sube.");
+        Alert.alert(t("common.error"), t("venue.emptyImageError"));
         return;
       }
 
@@ -616,13 +622,13 @@ const loadReviewBreakdown = useCallback(
       });
 
       if (up.error) {
-        Alert.alert("Error", up.error.message);
+        Alert.alert(t("common.error"), up.error.message);
         return;
       }
 
       const upd = await supabase.from("venues").update({ cover_photo_path: path }).eq("id", venue.id);
       if (upd.error) {
-        Alert.alert("Error", upd.error.message);
+        Alert.alert(t("common.error"), upd.error.message);
         return;
       }
 
@@ -630,11 +636,11 @@ const loadReviewBreakdown = useCallback(
       setCoverBust(Date.now());
       void loadVenue();
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? String(e));
+      Alert.alert(t("common.error"), e?.message ?? String(e));
     } finally {
       setCoverUploading(false);
     }
-  }, [venue, isAdmin, id, coverUploading, loadVenue]);
+  }, [venue, isAdmin, id, coverUploading, loadVenue, t]);
   // </SECTION:ACTIONS_ADMIN_COVER>
 
   // <SECTION:ACTIONS_ADMIN_COORDS>
@@ -645,7 +651,7 @@ const loadReviewBreakdown = useCallback(
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (perm.status !== "granted") {
-        Alert.alert("Permiso requerido", "Necesito permiso de localización.");
+        Alert.alert(t("venue.permissionRequiredTitle"), t("venue.locationPermissionNeeded"));
         return;
       }
 
@@ -655,16 +661,16 @@ const loadReviewBreakdown = useCallback(
 
       const upd = await supabase.from("venues").update({ lat, lon }).eq("id", venue.id);
       if (upd.error) {
-        Alert.alert("Error", upd.error.message);
+        Alert.alert(t("common.error"), upd.error.message);
         return;
       }
 
-      Alert.alert("OK", "Coordenadas actualizadas.");
+      Alert.alert(t("venue.okTitle"), t("venue.coordsUpdated"));
       void loadVenue();
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? String(e));
+      Alert.alert(t("common.error"), e?.message ?? String(e));
     }
-  }, [venue, isAdmin, loadVenue]);
+  }, [venue, isAdmin, loadVenue, t]);
   // </SECTION:ACTIONS_ADMIN_COORDS>
 
 // <SECTION:ACTIONS_REPORTS>
@@ -679,7 +685,7 @@ const submitVenueReport = useCallback(
 
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
-      Alert.alert("Inicia sesión", "Necesitas iniciar sesión para reportar.");
+      Alert.alert(t("venue.loginRequiredTitle"), t("venue.loginRequiredToReport"));
       router.push("/auth");
       return;
     }
@@ -692,13 +698,13 @@ const submitVenueReport = useCallback(
       });
 
       setReportOpen(false);
-      Alert.alert("Gracias", "Reporte enviado. Lo revisaremos pronto.");
+      Alert.alert(t("venue.thanksTitle"), t("venue.reportSent"));
       void loadVenue();
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "No se pudo enviar el reporte.");
+      Alert.alert(t("common.error"), e?.message ?? t("venue.reportSendError"));
     }
   },
-  [id, router, loadVenue]
+  [id, router, loadVenue, t]
 );
 // </SECTION:ACTIONS_REPORTS>
 
@@ -707,8 +713,8 @@ const submitVenueReport = useCallback(
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 120 }}>
-        {error ? <TText style={{ color: theme.colors.danger }}>Error: {error}</TText> : null}
-        {loading ? <TText muted>Cargando…</TText> : null}
+        {error ? <TText style={{ color: theme.colors.danger }}>{t("common.error")}: {error}</TText> : null}
+        {loading ? <TText muted>{t("common.loading")}</TText> : null}
 
         {!loading && venue ? (
           <>
@@ -738,7 +744,7 @@ const submitVenueReport = useCallback(
                         backgroundColor: theme.colors.surface2,
                       }}
                     >
-                      <TText weight="800">{venue.cacau_badge_text ?? "Cacau d'Or"}</TText>
+                      <TText weight="800">{venue.cacau_badge_text ?? t("venue.cacauFallback")}</TText>
                       {venue.cacau_badge_subtext ? (
                         <TText muted style={{ marginTop: 2 }}>
                           {venue.cacau_badge_subtext}
@@ -749,7 +755,7 @@ const submitVenueReport = useCallback(
                 ) : null}
               </View>
 
-              <TButton title="Valorar" onPress={goRate} />
+              <TButton title={t("venue.rateButton")} onPress={goRate} />
             </View>
             {/* </SECTION:RENDER_HEADER> */}
 
@@ -771,7 +777,7 @@ const submitVenueReport = useCallback(
                       }}
                       resizeMode="cover"
                       onError={(ev) => {
-                        const msg = (ev as any)?.nativeEvent?.error ?? "Error cargando imagen";
+                        const msg = (ev as any)?.nativeEvent?.error ?? t("venue.imageLoadError");
                         setCoverLoadError(String(msg));
                       }}
                     />
@@ -791,12 +797,12 @@ const submitVenueReport = useCallback(
                       }}
                     >
                       <TText weight="800" size={24}>
-                        {(venue?.name ?? "A").trim().slice(0, 2).toUpperCase()}
+                        {(venue?.name ?? t("venue.initialsFallback")).trim().slice(0, 2).toUpperCase()}
                       </TText>
 
                       {isAdmin ? (
                         <TText muted style={{ marginTop: 6 }}>
-                          {coverUploading ? "Subiendo…" : "Toca para subir portada"}
+                          {coverUploading ? t("venue.uploading") : t("venue.tapToUploadCover")}
                         </TText>
                       ) : null}
 
@@ -811,26 +817,26 @@ const submitVenueReport = useCallback(
 
                 <View style={{ height: 12 }} />
 
-                <TText weight="800">Ubicación</TText>
+                <TText weight="800">{t("venue.locationTitle")}</TText>
 
                 <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "space-between", gap: 12 as any }}>
-                  <TButton title="Abrir en mapas" onPress={openInMaps} />
+                  <TButton title={t("venue.openInMaps")} onPress={openInMaps} />
                   {hasCoords ? (
                     <TButton
-                      title="Copiar coords"
+                      title={t("venue.copyCoords")}
                       variant="ghost"
                       onPress={() =>
-                        Alert.alert("Coordenadas", `${hasCoords.lat.toFixed(6)}, ${hasCoords.lon.toFixed(6)}`)
+                        Alert.alert(t("venue.coordsTitle"), `${hasCoords.lat.toFixed(6)}, ${hasCoords.lon.toFixed(6)}`)
                       }
                     />
                   ) : (
-                    <TButton title="Sin coords" variant="ghost" onPress={() => Alert.alert("Info", "Aún sin coordenadas")} />
+                    <TButton title={t("venue.noCoords")} variant="ghost" onPress={() => Alert.alert(t("venue.infoTitle"), t("venue.stillNoCoords"))} />
                   )}
                 </View>
 
                 {isAdmin ? (
                   <View style={{ marginTop: 10 }}>
-                    <TButton title="Actualizar coords aquí" variant="ghost" onPress={ensureCoords} />
+                    <TButton title={t("venue.updateCoordsHere")} variant="ghost" onPress={ensureCoords} />
                   </View>
                 ) : null}
               </TCard>
@@ -853,7 +859,7 @@ const submitVenueReport = useCallback(
                 }}
               >
                 <TText weight="800" muted>
-                  Reportar
+                  {t("venue.reportButton")}
                 </TText>
               </Pressable>
             </View>
@@ -862,12 +868,12 @@ const submitVenueReport = useCallback(
             {/* <SECTION:RENDER_REPORT_STATUS> */}
             {myReportLoading ? (
               <TText muted style={{ marginTop: 10 }}>
-                Cargando estado del reporte…
+                {t("venue.loadingReportStatus")}
               </TText>
             ) : myReport ? (
               <View style={{ marginTop: 10 }}>
                 <TCard>
-                  <TText weight="800">{myReport.status === "pending" ? "Reporte enviado" : "Reporte revisado"}</TText>
+                  <TText weight="800">{myReport.status === "pending" ? t("venue.reportSentTitle") : t("venue.reportReviewedTitle")}</TText>
 
                   <View style={{ marginTop: 10 }}>
                     <View
@@ -883,10 +889,10 @@ const submitVenueReport = useCallback(
                     >
                       <TText weight="800">
                         {myReport.status === "pending"
-                          ? "En revisión"
+                          ? t("venue.reportStatus.pending")
                           : myReport.status === "approved"
-                          ? "Aprobado"
-                          : "Rechazado"}
+                          ? t("venue.reportStatus.approved")
+                          : t("venue.reportStatus.rejected")}
                       </TText>
                     </View>
                   </View>
@@ -910,7 +916,7 @@ const submitVenueReport = useCallback(
               <TCard>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <View style={{ flex: 1, paddingRight: 12 }}>
-                    <TText weight="800">Puntuación</TText>
+                    <TText weight="800">{t("venue.scoreTitle")}</TText>
                     <TText muted style={{ marginTop: 6 }}>
                       {reviewsLabel(Number(venueCount ?? 0))}
                     </TText>
@@ -945,21 +951,21 @@ const submitVenueReport = useCallback(
                     }}
                   >
                     <TText muted weight="800">
-                      {breakdownOpen ? "Ocultar desglose" : "Ver desglose"}
+                      {breakdownOpen ? t("venue.hideBreakdown") : t("venue.viewBreakdown")}
                     </TText>
                   </Pressable>
 
                   {breakdownOpen ? (
                     <View style={{ marginTop: 12 }}>
                       {breakdownLoading ? (
-                        <TText muted>Cargando desglose…</TText>
+                        <TText muted>{t("venue.loadingBreakdown")}</TText>
                       ) : breakdownErr ? (
                         <TText style={{ color: theme.colors.danger }}>{breakdownErr}</TText>
                       ) : !criteriaBreakdown || criteriaBreakdown.length === 0 ? (
-                        <TText muted>Aún no hay suficientes valoraciones para mostrar el desglose.</TText>
+                        <TText muted>{t("venue.noBreakdownYet")}</TText>
                       ) : (
                         criteriaBreakdown.map((row) => {
-                          const name = row.name_es || row.name_en || "Criterio";
+                          const name = row.name_es || row.name_en || t("venue.criterionFallback");
                           const v = Math.max(0, Math.min(5, Number(row.avg_score || 0)));
                           const pct = (v / 5) * 100;
 
@@ -1008,12 +1014,12 @@ const submitVenueReport = useCallback(
             {/* <SECTION:RENDER_REVIEWS> */}
             <View style={{ marginTop: theme.spacing.lg }}>
               <TText size={theme.font.h2} weight="700">
-                Reseñas
+                {t("venue.reviewsTitle")}
               </TText>
 
               {reviews.length === 0 ? (
                 <TText muted style={{ marginTop: theme.spacing.sm }}>
-                  Aún no hay reseñas.
+                  {t("venue.noReviews")}
                 </TText>
               ) : (
                 <View style={{ marginTop: theme.spacing.sm }}>
@@ -1032,7 +1038,7 @@ const submitVenueReport = useCallback(
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                               <View style={{ flex: 1, paddingRight: 12 }}>
                                 <TText weight="800" numberOfLines={1}>
-                                  {p?.display_name ?? "Usuario"}
+                                  {p?.display_name ?? t("venue.userFallback")}
                                 </TText>
                                 <TText muted style={{ marginTop: 6 }}>
                                   {fmtDate(r.created_at)}
@@ -1081,7 +1087,7 @@ const submitVenueReport = useCallback(
                                 }}
                               >
                                 <TText muted weight="800">
-                                  {open ? "Ocultar desglose" : "Ver desglose"}
+                                  {open ? t("venue.hideBreakdown") : t("venue.viewBreakdown")}
                                 </TText>
                               </Pressable>
 
@@ -1089,19 +1095,19 @@ const submitVenueReport = useCallback(
                                 <View style={{ marginTop: 12 }}>
                                   {r.price_eur != null ? (
                                     <TText muted style={{ marginBottom: 8 }}>
-                                      Precio: {fmtMoney(r.price_eur)}
+                                      {t("venue.priceLine", { price: fmtMoney(r.price_eur) })}
                                     </TText>
                                   ) : null}
 
                                   {isL ? (
-                                    <TText muted>Cargando desglose…</TText>
+                                    <TText muted>{t("venue.loadingBreakdown")}</TText>
                                   ) : err ? (
                                     <TText style={{ color: theme.colors.danger }}>{err}</TText>
                                   ) : !data || data.length === 0 ? (
-                                    <TText muted>Esta reseña no tiene desglose disponible.</TText>
+                                    <TText muted>{t("venue.reviewNoBreakdown")}</TText>
                                   ) : (
                                     data.map((row) => {
-                                      const name = row.name_es || row.name_en || "Criterio";
+                                      const name = row.name_es || row.name_en || t("venue.criterionFallback");
                                       const v = Math.max(0, Math.min(5, Number(row.score || 0)));
                                       const pct = (v / 5) * 100;
 
@@ -1153,7 +1159,7 @@ const submitVenueReport = useCallback(
 
             {/* <SECTION:RENDER_FOOTER> */}
             <View style={{ marginTop: theme.spacing.xl }}>
-              <TButton title="Volver" variant="ghost" onPress={() => router.back()} />
+              <TButton title={t("common.goBack")} variant="ghost" onPress={() => router.back()} />
             </View>
 
             {reportOpen && ReportVenueModalComp ? (
