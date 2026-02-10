@@ -1,0 +1,15 @@
+{
+  "common": {
+    "appName": "Advisoret",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "loading": "Cargando…"
+  },
+  "languages": {
+    "es": "Español",
+    "en": "English"
+  },
+  "account": {
+    "language": "Idioma"
+  }
+}
