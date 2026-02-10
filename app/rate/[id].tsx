@@ -70,7 +70,7 @@ function Stepper({
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 as any }}>
-      <TButton title="-" variant="ghost" onPress={dec} disabled={disabled} />
+      <TButton title={"-"} variant="ghost" onPress={dec} disabled={disabled} />
       <View
         style={{
           minWidth: 44,
@@ -85,7 +85,7 @@ function Stepper({
       >
         <TText weight="800">{clampScore(value)}</TText>
       </View>
-      <TButton title="+" variant="ghost" onPress={inc} disabled={disabled} />
+      <TButton title={"+"} variant="ghost" onPress={inc} disabled={disabled} />
     </View>
   );
 }
