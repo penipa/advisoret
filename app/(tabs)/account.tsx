@@ -132,6 +132,8 @@ export default function AccountScreen() {
   const [reports, setReports] = useState<VenueSuggestion[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportsError, setReportsError] = useState<string | null>(null);
+  const [reportsOpen, setReportsOpen] = useState(false);
+  const [reportsTouched, setReportsTouched] = useState(false);
 
   // ✅ Admin: moderación reportes (venue_suggestions)
   const [isAdmin, setIsAdmin] = useState(false);
@@ -144,6 +146,8 @@ export default function AccountScreen() {
   const [myProposals, setMyProposals] = useState<VenueProposalRow[]>([]);
   const [myProposalsLoading, setMyProposalsLoading] = useState(false);
   const [myProposalsError, setMyProposalsError] = useState<string | null>(null);
+  const [proposalsOpen, setProposalsOpen] = useState(false);
+  const [proposalsTouched, setProposalsTouched] = useState(false);
 
   // ✅ Admin: moderación altas (venue_proposals)
   const [adminProposalsTab, setAdminProposalsTab] = useState<"pending" | "reviewed">("pending");
@@ -385,6 +389,13 @@ export default function AccountScreen() {
     void loadReports(uid);
   }, [loadReports, session?.user?.id]);
 
+  useEffect(() => {
+    if (reportsTouched) return;
+    if (reports.some((r) => r.status === "pending")) {
+      setReportsOpen(true);
+    }
+  }, [reports, reportsTouched]);
+
   // -----------------------------
   // Admin reportes (venue_suggestions)
   // -----------------------------
@@ -560,6 +571,13 @@ export default function AccountScreen() {
     void loadMyProposals(uid);
   }, [loadMyProposals, session?.user?.id]);
 
+  useEffect(() => {
+    if (proposalsTouched) return;
+    if (myProposals.some((p) => p.status === "pending")) {
+      setProposalsOpen(true);
+    }
+  }, [myProposals, proposalsTouched]);
+
   // -----------------------------
   // Admin propuestas (venue_proposals)
   // -----------------------------
@@ -686,6 +704,8 @@ export default function AccountScreen() {
   const surface2 = (theme.colors as any).surface2 ?? theme.colors.surface;
 
   const totalPending = (pendingCounts.suggestions ?? 0) + (pendingCounts.proposals ?? 0);
+  const reportsPendingCount = reports.filter((r) => r.status === "pending").length;
+  const proposalsPendingCount = myProposals.filter((p) => p.status === "pending").length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
@@ -856,78 +876,121 @@ export default function AccountScreen() {
         {session ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">{t("account.myReports")}</TText>
+              <Pressable
+                onPress={() => {
+                  setReportsTouched(true);
+                  setReportsOpen((prev) => !prev);
+                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 as any, flex: 1, marginRight: 8 }}
+              >
+                <TText weight="800">{t("account.myReports")}</TText>
+                <View
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  <TText size={12} weight="800" muted>
+                    {reports.length}
+                  </TText>
+                </View>
+                {reportsPendingCount > 0 ? (
+                  <View
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                      backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
+                    }}
+                  >
+                    <TText size={12} weight="800">
+                      +{reportsPendingCount}
+                    </TText>
+                  </View>
+                ) : null}
+                <TText muted size={12}>
+                  {reportsOpen ? "▾" : "▸"}
+                </TText>
+              </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadReports(session.user.id)} />
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
-              {reportsLoading ? (
-                <TText muted>{t("account.loadingReports")}</TText>
-              ) : reportsError ? (
-                <>
-                  <TText style={{ color: theme.colors.danger }} weight="700">
-                    {t("account.couldNotLoad")}
-                  </TText>
-                  <TText muted style={{ marginTop: 6 }}>{reportsError}</TText>
-                </>
-              ) : reports.length === 0 ? (
-                <>
-                  <TText weight="700">{t("account.noReportsYet")}</TText>
-                  <TText muted style={{ marginTop: 6 }}>
-                    {t("account.noReportsHint")}
-                  </TText>
-                </>
-              ) : (
-                <View style={{ gap: 10 as any }}>
-                  {reports.map((it) => {
-                    const venueLabel = it.venue?.name
-                      ? `${it.venue.name}${it.venue.city ? ` · ${it.venue.city}` : ""}`
-                      : null;
-                    const resolutionNote = normalizeResolutionNote(it.resolution_note, "report");
+              {reportsOpen ? (
+                reportsLoading ? (
+                  <TText muted>{t("account.loadingReports")}</TText>
+                ) : reportsError ? (
+                  <>
+                    <TText style={{ color: theme.colors.danger }} weight="700">
+                      {t("account.couldNotLoad")}
+                    </TText>
+                    <TText muted style={{ marginTop: 6 }}>{reportsError}</TText>
+                  </>
+                ) : reports.length === 0 ? (
+                  <>
+                    <TText weight="700">{t("account.noReportsYet")}</TText>
+                    <TText muted style={{ marginTop: 6 }}>
+                      {t("account.noReportsHint")}
+                    </TText>
+                  </>
+                ) : (
+                  <View style={{ gap: 10 as any }}>
+                    {reports.map((it) => {
+                      const venueLabel = it.venue?.name
+                        ? `${it.venue.name}${it.venue.city ? ` · ${it.venue.city}` : ""}`
+                        : null;
+                      const resolutionNote = normalizeResolutionNote(it.resolution_note, "report");
 
-                    return (
-                      <View
-                        key={it.id}
-                        style={{
-                          paddingVertical: 10,
-                          borderBottomWidth: 1,
-                          borderBottomColor: theme.colors.border,
-                        }}
-                      >
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                          <TText muted size={12}>
-                            {fmtDateTime(it.created_at)}
-                          </TText>
-                          <View
-                            style={{
-                              paddingHorizontal: 10,
-                              paddingVertical: 4,
-                              borderRadius: 999,
-                              borderWidth: 1,
-                              borderColor: theme.colors.border,
-                              backgroundColor: "transparent",
-                            }}
-                          >
-                            <TText size={12} weight="800" muted>
-                              {statusLabel(it.status)}
+                      return (
+                        <View
+                          key={it.id}
+                          style={{
+                            paddingVertical: 10,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.colors.border,
+                          }}
+                        >
+                          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                            <TText muted size={12}>
+                              {fmtDateTime(it.created_at)}
                             </TText>
+                            <View
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 999,
+                                borderWidth: 1,
+                                borderColor: theme.colors.border,
+                                backgroundColor: "transparent",
+                              }}
+                            >
+                              <TText size={12} weight="800" muted>
+                                {statusLabel(it.status)}
+                              </TText>
+                            </View>
                           </View>
+
+                          {venueLabel ? (
+                            <TText weight="800" style={{ marginTop: 8 }}>
+                              {venueLabel}
+                            </TText>
+                          ) : null}
+
+                          <TText style={{ marginTop: 6 }}>{it.reason ? it.reason : t("account.reportFallback")}</TText>
+
+                          {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
                         </View>
-
-                        {venueLabel ? (
-                          <TText weight="800" style={{ marginTop: 8 }}>
-                            {venueLabel}
-                          </TText>
-                        ) : null}
-
-                        <TText style={{ marginTop: 6 }}>{it.reason ? it.reason : t("account.reportFallback")}</TText>
-
-                        {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+                      );
+                    })}
+                  </View>
+                )
+              ) : null}
             </TCard>
           </View>
         ) : null}
@@ -1072,78 +1135,121 @@ export default function AccountScreen() {
         {session ? (
           <View style={{ marginTop: theme.spacing.lg }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <TText weight="800">{t("account.myProposals")}</TText>
+              <Pressable
+                onPress={() => {
+                  setProposalsTouched(true);
+                  setProposalsOpen((prev) => !prev);
+                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 as any, flex: 1, marginRight: 8 }}
+              >
+                <TText weight="800">{t("account.myProposals")}</TText>
+                <View
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  <TText size={12} weight="800" muted>
+                    {myProposals.length}
+                  </TText>
+                </View>
+                {proposalsPendingCount > 0 ? (
+                  <View
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                      backgroundColor: (theme.colors as any).surface2 ?? theme.colors.surface,
+                    }}
+                  >
+                    <TText size={12} weight="800">
+                      +{proposalsPendingCount}
+                    </TText>
+                  </View>
+                ) : null}
+                <TText muted size={12}>
+                  {proposalsOpen ? "▾" : "▸"}
+                </TText>
+              </Pressable>
               <TButton title={t("common.reload")} variant="ghost" onPress={() => void loadMyProposals(session.user.id)} />
             </View>
 
             <TCard style={{ marginTop: 10, backgroundColor: surface2 }}>
-              {myProposalsLoading ? (
-                <TText muted>{t("account.loadingProposals")}</TText>
-              ) : myProposalsError ? (
-                <>
-                  <TText style={{ color: theme.colors.danger }} weight="700">
-                    {t("account.couldNotLoad")}
-                  </TText>
-                  <TText muted style={{ marginTop: 6 }}>{myProposalsError}</TText>
-                </>
-              ) : myProposals.length === 0 ? (
-                <>
-                  <TText weight="700">{t("account.noProposalsYet")}</TText>
-                  <TText muted style={{ marginTop: 6 }}>
-                    {t("account.noProposalsHint")}
-                  </TText>
-                </>
-              ) : (
-                <View style={{ gap: 10 as any }}>
-                  {myProposals.map((it) => {
-                    const title = (it.name ?? t("account.proposalFallback")).trim();
-                    const line2 = [it.city, it.address_text].filter(Boolean).join(" · ");
-                    const note = (it.notes ?? it.message ?? "").trim();
-                    const resolutionNote = normalizeResolutionNote(it.resolution_note, "proposal");
+              {proposalsOpen ? (
+                myProposalsLoading ? (
+                  <TText muted>{t("account.loadingProposals")}</TText>
+                ) : myProposalsError ? (
+                  <>
+                    <TText style={{ color: theme.colors.danger }} weight="700">
+                      {t("account.couldNotLoad")}
+                    </TText>
+                    <TText muted style={{ marginTop: 6 }}>{myProposalsError}</TText>
+                  </>
+                ) : myProposals.length === 0 ? (
+                  <>
+                    <TText weight="700">{t("account.noProposalsYet")}</TText>
+                    <TText muted style={{ marginTop: 6 }}>
+                      {t("account.noProposalsHint")}
+                    </TText>
+                  </>
+                ) : (
+                  <View style={{ gap: 10 as any }}>
+                    {myProposals.map((it) => {
+                      const title = (it.name ?? t("account.proposalFallback")).trim();
+                      const line2 = [it.city, it.address_text].filter(Boolean).join(" · ");
+                      const note = (it.notes ?? it.message ?? "").trim();
+                      const resolutionNote = normalizeResolutionNote(it.resolution_note, "proposal");
 
-                    return (
-                      <View
-                        key={it.id}
-                        style={{
-                          paddingVertical: 10,
-                          borderBottomWidth: 1,
-                          borderBottomColor: theme.colors.border,
-                        }}
-                      >
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                          <TText muted size={12}>
-                            {fmtDateTime(it.created_at)}
-                          </TText>
-                          <View
-                            style={{
-                              paddingHorizontal: 10,
-                              paddingVertical: 4,
-                              borderRadius: 999,
-                              borderWidth: 1,
-                              borderColor: theme.colors.border,
-                              backgroundColor: "transparent",
-                            }}
-                          >
-                            <TText size={12} weight="800" muted>
-                              {statusLabel(it.status)}
+                      return (
+                        <View
+                          key={it.id}
+                          style={{
+                            paddingVertical: 10,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.colors.border,
+                          }}
+                        >
+                          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                            <TText muted size={12}>
+                              {fmtDateTime(it.created_at)}
                             </TText>
+                            <View
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 999,
+                                borderWidth: 1,
+                                borderColor: theme.colors.border,
+                                backgroundColor: "transparent",
+                              }}
+                            >
+                              <TText size={12} weight="800" muted>
+                                {statusLabel(it.status)}
+                              </TText>
+                            </View>
                           </View>
+
+                          <TText weight="800" style={{ marginTop: 8 }}>
+                            {title}
+                          </TText>
+
+                          {line2 ? <TText muted style={{ marginTop: 6 }}>{line2}</TText> : null}
+
+                          {note ? <TText style={{ marginTop: 6 }}>{note}</TText> : null}
+
+                          {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
                         </View>
-
-                        <TText weight="800" style={{ marginTop: 8 }}>
-                          {title}
-                        </TText>
-
-                        {line2 ? <TText muted style={{ marginTop: 6 }}>{line2}</TText> : null}
-
-                        {note ? <TText style={{ marginTop: 6 }}>{note}</TText> : null}
-
-                        {resolutionNote ? <TText muted style={{ marginTop: 6 }}>{resolutionNote}</TText> : null}
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+                      );
+                    })}
+                  </View>
+                )
+              ) : null}
             </TCard>
           </View>
         ) : null}
