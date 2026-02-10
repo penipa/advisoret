@@ -80,11 +80,11 @@ export default function SuggestVenueScreen() {
     const no = notes.trim();
 
     if (!n || !c) {
-      setError("Faltan campos: nombre y ciudad.");
+      setError(t("venueSuggest.errors.missingFields"));
       return;
     }
     if (u && !isProbablyUrl(u)) {
-      setError("El enlace debe empezar por http(s)://");
+      setError(t("venueSuggest.errors.invalidUrl"));
       return;
     }
 
@@ -102,7 +102,7 @@ export default function SuggestVenueScreen() {
 
       router.back();
     } catch (e: any) {
-      setError(e?.message ?? "No se pudo enviar la propuesta.");
+      setError(e?.message ?? t("venueSuggest.errors.submitFailed"));
     } finally {
       setSaving(false);
     }
@@ -135,7 +135,7 @@ export default function SuggestVenueScreen() {
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Ej: Bar Manolo"
+              placeholder={t("venueSuggest.placeholders.name")}
               placeholderTextColor={placeholderColor}
               style={inputStyle}
               selectionColor={cursorColor}
@@ -150,7 +150,7 @@ export default function SuggestVenueScreen() {
             <TextInput
               value={city}
               onChangeText={setCity}
-              placeholder="Ej: Valencia"
+              placeholder={t("venueSuggest.placeholders.city")}
               placeholderTextColor={placeholderColor}
               style={inputStyle}
               selectionColor={cursorColor}
@@ -165,7 +165,7 @@ export default function SuggestVenueScreen() {
             <TextInput
               value={addressText}
               onChangeText={setAddressText}
-              placeholder="Calle, número…"
+              placeholder={t("venueSuggest.placeholders.address")}
               placeholderTextColor={placeholderColor}
               style={inputStyle}
               selectionColor={cursorColor}
@@ -180,7 +180,7 @@ export default function SuggestVenueScreen() {
             <TextInput
               value={mapsUrl}
               onChangeText={setMapsUrl}
-              placeholder="https://maps.app.goo.gl/…"
+              placeholder={t("venueSuggest.placeholders.mapsUrl")}
               placeholderTextColor={placeholderColor}
               autoCapitalize="none"
               autoCorrect={false}
@@ -197,7 +197,7 @@ export default function SuggestVenueScreen() {
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="Ej: mejor bocadillo de…"
+              placeholder={t("venueSuggest.placeholders.notes")}
               placeholderTextColor={placeholderColor}
               multiline
               style={{

@@ -288,7 +288,19 @@
     "mapsUrl": "Google Maps URL (optional)",
     "notes": "Notes (optional)",
     "send": "Send proposal",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "placeholders": {
+      "name": "Ex: Bar Manolo",
+      "city": "Ex: Valencia",
+      "address": "Street, number…",
+      "mapsUrl": "https://maps.app.goo.gl/…",
+      "notes": "Ex: best sandwich in…"
+    },
+    "errors": {
+      "missingFields": "Missing required fields: name and city.",
+      "invalidUrl": "The link must start with http(s)://",
+      "submitFailed": "Could not send the proposal."
+    }
   },
   "reportModal": {
     "titleFallback": "Report incorrect data",
