@@ -100,6 +100,41 @@
       "mine": "Mis valoraciones"
     }
   },
+  "rate": {
+    "title": "Valorar",
+    "titleEdit": "Editar valoración",
+    "criteriaTitle": "Criterios",
+    "detailsTitle": "Detalles",
+    "priceLabel": "Precio (€)",
+    "pricePlaceholder": "8.50",
+    "commentLabel": "Comentario (opcional)",
+    "commentPlaceholder": "Qué has pedido, qué tal el cremaet…",
+    "range": "1–5",
+    "editModeHint": "Modo edición: cambia lo que quieras y guarda.",
+    "prefillEditingThisMonth": "Ya has valorado este local este mes. Estás editando tu valoración.",
+    "reviews": {
+      "one": "1 reseña",
+      "many": "{{count}} reseñas"
+    },
+    "errors": {
+      "loadYourRating": "No he podido cargar tu valoración.",
+      "loadYourScores": "No he podido cargar las puntuaciones de tu valoración.",
+      "priceRequired": "Indica el precio por persona (ej: 8.50).",
+      "priceInvalid": "El precio no parece un número válido. Ej: 8.50",
+      "noCriteriaLoaded": "No hay criterios cargados. Revisa rating_criteria."
+    },
+    "saved": {
+      "newPeriod": "Guardado ✅ (han pasado 30 días: nueva valoración creada)",
+      "updated": "Actualizado ✅",
+      "saved": "Guardado ✅ ¡Gracias!"
+    },
+    "cta": {
+      "preparingEdit": "Preparando edición...",
+      "saving": "Guardando...",
+      "saveChanges": "Guardar cambios",
+      "saveRating": "Guardar valoración"
+    }
+  },
   "rankings": {
     "monthTag": "Ranking - Mes",
     "allTag": "Ranking - Siempre",

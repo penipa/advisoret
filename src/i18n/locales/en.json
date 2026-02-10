@@ -100,6 +100,41 @@
       "mine": "My ratings"
     }
   },
+  "rate": {
+    "title": "Rate",
+    "titleEdit": "Edit rating",
+    "criteriaTitle": "Criteria",
+    "detailsTitle": "Details",
+    "priceLabel": "Price (€)",
+    "pricePlaceholder": "8.50",
+    "commentLabel": "Comment (optional)",
+    "commentPlaceholder": "What you ordered, how was the cremaet…",
+    "range": "1–5",
+    "editModeHint": "Edit mode: change what you want and save.",
+    "prefillEditingThisMonth": "You already rated this place this month. You are editing your rating.",
+    "reviews": {
+      "one": "1 review",
+      "many": "{{count}} reviews"
+    },
+    "errors": {
+      "loadYourRating": "Could not load your rating.",
+      "loadYourScores": "Could not load your rating scores.",
+      "priceRequired": "Enter price per person (e.g. 8.50).",
+      "priceInvalid": "Price does not look like a valid number. E.g. 8.50",
+      "noCriteriaLoaded": "No criteria loaded. Check rating_criteria."
+    },
+    "saved": {
+      "newPeriod": "Saved ✅ (30 days have passed: new rating created)",
+      "updated": "Updated ✅",
+      "saved": "Saved ✅ Thanks!"
+    },
+    "cta": {
+      "preparingEdit": "Preparing edit...",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saveRating": "Save rating"
+    }
+  },
   "rankings": {
     "monthTag": "Ranking - Month",
     "allTag": "Ranking - All time",

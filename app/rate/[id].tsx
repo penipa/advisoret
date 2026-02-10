@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 import { supabase } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
@@ -94,6 +95,7 @@ function Stepper({
 export default function RateScreen() {
   // <SECTION:SCREEN_INIT>
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -257,7 +259,7 @@ export default function RateScreen() {
         .single();
 
       if (r.error || !r.data?.id) {
-        setSaveErr("No he podido cargar tu valoración.");
+        setSaveErr(t("rate.errors.loadYourRating"));
         return;
       }
 
@@ -267,7 +269,7 @@ export default function RateScreen() {
         .eq("rating_id", ratingId);
 
       if (rs.error) {
-        setSaveErr("No he podido cargar las puntuaciones de tu valoración.");
+        setSaveErr(t("rate.errors.loadYourScores"));
         return;
       }
 
@@ -294,7 +296,7 @@ export default function RateScreen() {
         return base;
       });
 
-      setSaveMsg(msg ?? "Modo edición: cambia lo que quieras y guarda.");
+      setSaveMsg(msg ?? t("rate.editModeHint"));
     } finally {
       setEditLoading(false);
     }
@@ -322,7 +324,7 @@ export default function RateScreen() {
       if (existingId) {
         await loadRatingForEditById(
           existingId,
-          "Ya has valorado este local este mes. Estás editando tu valoración."
+          t("rate.prefillEditingThisMonth")
         );
       }
     })();
@@ -340,17 +342,17 @@ const saveRating = async () => {
 
   // Precio obligatorio (MVP-safe: validación en cliente; la RPC también lo exige)
   if (parsedPrice === null) {
-    setSaveErr("Indica el precio por persona (ej: 8.50).");
+    setSaveErr(t("rate.errors.priceRequired"));
     return;
   }
   if (Number.isNaN(parsedPrice)) {
-    setSaveErr("El precio no parece un número válido. Ej: 8.50");
+    setSaveErr(t("rate.errors.priceInvalid"));
     return;
   }
 
   // Guardrail: criterios/scores siempre consistentes
   if (!criteria.length) {
-    setSaveErr("No hay criterios cargados. Revisa rating_criteria.");
+    setSaveErr(t("rate.errors.noCriteriaLoaded"));
     return;
   }
 
@@ -387,11 +389,11 @@ const saveRating = async () => {
     const action = (row as any)?.action as string | undefined;
 
     if (action === "inserted_new_period") {
-      setSaveMsg("Guardado ✅ (han pasado 30 días: nueva valoración creada)");
+      setSaveMsg(t("rate.saved.newPeriod"));
     } else if (action === "overwritten") {
-      setSaveMsg("Actualizado ✅");
+      setSaveMsg(t("rate.saved.updated"));
     } else {
-      setSaveMsg("Guardado ✅ ¡Gracias!");
+      setSaveMsg(t("rate.saved.saved"));
     }
 
     setTimeout(() => {
@@ -420,12 +422,12 @@ const saveRating = async () => {
             }}
           >
             <TText size={theme.font.title} weight="800">
-              {editRatingId ? "Editar valoración" : "Valorar"}
+              {editRatingId ? t("rate.titleEdit") : t("rate.title")}
             </TText>
 
             {error && (
               <TText style={{ color: theme.colors.danger, marginTop: theme.spacing.md }}>
-                Error: {error}
+                {t("common.error")}: {error}
               </TText>
             )}
 
@@ -451,7 +453,11 @@ const saveRating = async () => {
                     valueColor="#C9A35C"
                   />
                   <View style={{ marginLeft: 12 }}>
-                    <TText muted>{venueCount === 1 ? "1 reseña" : `${venueCount} reseñas`}</TText>
+                    <TText muted>
+                      {venueCount === 1
+                        ? t("rate.reviews.one")
+                        : t("rate.reviews.many", { count: venueCount })}
+                    </TText>
                   </View>
                 </View>
               </TCard>
@@ -460,11 +466,11 @@ const saveRating = async () => {
             <View style={{ height: theme.spacing.lg }} />
 
             <TText size={theme.font.h2} weight="800">
-              Criterios
+              {t("rate.criteriaTitle")}
             </TText>
 
             <View style={{ marginTop: theme.spacing.sm }}>
-              {loading && <TText muted>Cargando…</TText>}
+              {loading && <TText muted>{t("common.loading")}</TText>}
 
               {!loading &&
                 criteria.map((c) => (
@@ -491,7 +497,7 @@ const saveRating = async () => {
                         </View>
 
                         <TText muted style={{ marginTop: 4 }}>
-                          1–5
+                          {t("rate.range")}
                         </TText>
                       </View>
 
@@ -510,16 +516,16 @@ const saveRating = async () => {
             <View style={{ height: theme.spacing.lg }} />
 
             <TText size={theme.font.h2} weight="800">
-              Detalles
+              {t("rate.detailsTitle")}
             </TText>
 
             <TCard style={{ marginTop: theme.spacing.sm }}>
-              <TText weight="700">Precio (€)</TText>
+              <TText weight="700">{t("rate.priceLabel")}</TText>
               <TextInput
                 value={price}
                 onChangeText={setPrice}
                 keyboardType="decimal-pad"
-                placeholder="8.50"
+                placeholder={t("rate.pricePlaceholder")}
                 placeholderTextColor={theme.colors.textMuted}
                 editable={!isBusy}
                 style={{
@@ -537,11 +543,11 @@ const saveRating = async () => {
 
               <View style={{ height: theme.spacing.md }} />
 
-              <TText weight="700">Comentario (opcional)</TText>
+              <TText weight="700">{t("rate.commentLabel")}</TText>
               <TextInput
                 value={comment}
                 onChangeText={setComment}
-                placeholder="Qué has pedido, qué tal el cremaet…"
+                placeholder={t("rate.commentPlaceholder")}
                 placeholderTextColor={theme.colors.textMuted}
                 multiline
                 editable={!isBusy}
@@ -561,7 +567,7 @@ const saveRating = async () => {
             </TCard>
 
             <View style={{ marginTop: theme.spacing.lg }}>
-              <TButton title="Volver" variant="ghost" onPress={() => router.back()} disabled={isBusy} />
+              <TButton title={t("common.goBack")} variant="ghost" onPress={() => router.back()} disabled={isBusy} />
             </View>
           </ScrollView>
 
@@ -593,12 +599,12 @@ const saveRating = async () => {
             <TButton
               title={
                 editLoading
-                  ? "Preparando edición..."
+                  ? t("rate.cta.preparingEdit")
                   : saving
-                  ? "Guardando..."
+                  ? t("rate.cta.saving")
                   : editRatingId
-                  ? "Guardar cambios"
-                  : "Guardar valoración"
+                  ? t("rate.cta.saveChanges")
+                  : t("rate.cta.saveRating")
               }
               disabled={isBusy}
               onPress={() => void saveRating()}
