@@ -28,7 +28,7 @@ export default function AuthCallbackScreen() {
 
         if (errDesc) {
           setStatus("Error del enlace");
-          Alert.alert("Error", errDesc);
+          Alert.alert(t("common.error"), errDesc);
           router.replace("/auth");
           return;
         }

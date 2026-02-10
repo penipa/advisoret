@@ -321,7 +321,11 @@
     "follow": "Follow",
     "following": "Following",
     "recommendations": "Recommendations",
-    "noRatings": "No ratings yet."
+    "noRatings": "No ratings yet.",
+    "errors": {
+      "updateFailedTitle": "Could not update",
+      "tryAgain": "Please try again."
+    }
   },
   "venueSuggest": {
     "title": "Suggest place",

@@ -321,7 +321,11 @@
     "follow": "Seguir",
     "following": "Siguiendo",
     "recommendations": "Recomendaciones",
-    "noRatings": "Aún no hay valoraciones."
+    "noRatings": "Aún no hay valoraciones.",
+    "errors": {
+      "updateFailedTitle": "No se pudo actualizar",
+      "tryAgain": "Inténtalo de nuevo."
+    }
   },
   "venueSuggest": {
     "title": "Proponer local",

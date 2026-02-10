@@ -75,7 +75,7 @@ export function ReportVenueModal(props: {
         typeof e?.message === "string"
           ? e.message
           : "No se pudo enviar el reporte. Inténtalo de nuevo.";
-      Alert.alert("Error", msg);
+      Alert.alert(t("common.error"), msg);
       setSubmitting(false);
     }
   };

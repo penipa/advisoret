@@ -160,7 +160,7 @@ export default function UserProfileScreen() {
         setIsFollowing(true);
       }
     } catch (e: any) {
-      Alert.alert("No se pudo actualizar", e?.message ?? "Inténtalo de nuevo.");
+      Alert.alert(t("user.errors.updateFailedTitle"), e?.message ?? t("user.errors.tryAgain"));
     } finally {
       setBusy(false);
     }
