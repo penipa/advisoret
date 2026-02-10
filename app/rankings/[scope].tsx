@@ -33,10 +33,10 @@ type RankRow = {
   n: number;
 };
 
-function reviewsLabel(n: number) {
-  if (!n || n <= 0) return "Sin resenas";
-  if (n === 1) return "1 resena";
-  return `${n} resenas`;
+function reviewsLabel(n: number, t: (key: string, options?: any) => string) {
+  if (!n || n <= 0) return t("rankings.reviews.none");
+  if (n === 1) return t("rankings.reviews.one");
+  return t("rankings.reviews.many", { count: n });
 }
 
 function monthRangeISO() {
@@ -142,7 +142,7 @@ export default function RankingsScreen() {
         }
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Error cargando rankings");
+        setError(e?.message ?? t("rankings.loadError"));
         setRows([]);
       } finally {
         if (!alive) return;
@@ -153,7 +153,7 @@ export default function RankingsScreen() {
     return () => {
       alive = false;
     };
-  }, [isMonth]);
+  }, [isMonth, t]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -175,7 +175,7 @@ export default function RankingsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
         <BrandLockup
-          title="Advisoret"
+          title={t("common.appName")}
           iconSource={BRAND_A}
           tag={isMonth ? t("rankings.monthTag") : t("rankings.allTag")}
           style={{ marginBottom: theme.spacing.lg + 6 }}
@@ -212,8 +212,10 @@ export default function RankingsScreen() {
                 {loading
                   ? UI.ellipsis
                   : isFiltering
-                    ? `Mostrando ${filtered.length} de ${rows.length}`
-                    : `${rows.length} ${rows.length === 1 ? "local" : "locales"}`}
+                    ? t("rankings.showingOf", { shown: filtered.length, total: rows.length })
+                    : rows.length === 1
+                      ? t("rankings.places.one", { count: rows.length })
+                      : t("rankings.places.many", { count: rows.length })}
               </TText>
             </View>
 
@@ -235,7 +237,7 @@ export default function RankingsScreen() {
 
         {error ? (
           <TCard style={{ marginBottom: theme.spacing.md }}>
-            <TText weight="800">Error</TText>
+            <TText weight="800">{t("common.error")}</TText>
             <TText muted style={{ marginTop: 6 }}>
               {error}
             </TText>
@@ -244,12 +246,12 @@ export default function RankingsScreen() {
 
         {loading ? (
           <TCard>
-            <TText weight="800">Cargando{UI.ellipsis}</TText>
+            <TText weight="800">{t("common.loadingDots")}</TText>
             <TText muted style={{ marginTop: 6 }}>{t("rankings.loading")}</TText>
           </TCard>
         ) : filtered.length === 0 ? (
           <TCard>
-            <TText weight="800">Sin resultados</TText>
+            <TText weight="800">{t("rankings.noResultsTitle")}</TText>
             <TText muted style={{ marginTop: 6 }}>{t("rankings.noResults")}</TText>
           </TCard>
         ) : (
@@ -274,7 +276,7 @@ export default function RankingsScreen() {
                           {r.city}
                         </TText>
 
-                        <TText muted style={{ marginTop: 8 }}>{reviewsLabel(r.n)}</TText>
+                        <TText muted style={{ marginTop: 8 }}>{reviewsLabel(r.n, t)}</TText>
                       </View>
 
                       {r.n > 0 ? (
@@ -301,7 +303,7 @@ export default function RankingsScreen() {
                           }}
                         >
                           <TText size={12} weight="800">
-                            NUEVO
+                            {t("common.new")}
                           </TText>
                         </View>
                       )}

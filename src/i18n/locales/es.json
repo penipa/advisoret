@@ -302,7 +302,19 @@
     "allLabel": "Historico",
     "searchPlaceholder": "Buscar por nombre o ciudad",
     "loading": "Preparando rankings.",
-    "noResults": "Prueba con otro nombre o ciudad."
+    "noResults": "Prueba con otro nombre o ciudad.",
+    "loadError": "Error cargando rankings",
+    "showingOf": "Mostrando {{shown}} de {{total}}",
+    "noResultsTitle": "Sin resultados",
+    "places": {
+      "one": "{{count}} local",
+      "many": "{{count}} locales"
+    },
+    "reviews": {
+      "none": "Sin resenas",
+      "one": "1 resena",
+      "many": "{{count}} resenas"
+    }
   },
   "user": {
     "userFallback": "Usuario",

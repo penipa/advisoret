@@ -302,7 +302,19 @@
     "allLabel": "Historical",
     "searchPlaceholder": "Search by name or city",
     "loading": "Preparing rankings.",
-    "noResults": "Try another name or city."
+    "noResults": "Try another name or city.",
+    "loadError": "Error loading rankings",
+    "showingOf": "Showing {{shown}} of {{total}}",
+    "noResultsTitle": "No results",
+    "places": {
+      "one": "{{count}} place",
+      "many": "{{count}} places"
+    },
+    "reviews": {
+      "none": "No reviews",
+      "one": "1 review",
+      "many": "{{count}} reviews"
+    }
   },
   "user": {
     "userFallback": "User",
