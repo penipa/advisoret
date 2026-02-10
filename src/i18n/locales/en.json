@@ -102,16 +102,16 @@
     },
     "reviewSuggestion": {
       "markedAs": "Marked as {{status}}.",
-      "defaultNoteApproved": "Reviewed: report accepted.",
-      "defaultNoteRejected": "Reviewed: no changes applied.",
+      "defaultNoteApproved": "Approved.",
+      "defaultNoteRejected": "Rejected.",
       "approveTitle": "Approve report",
       "rejectTitle": "Reject report",
       "resolutionNoteOptional": "Resolution note (optional)."
     },
     "reviewProposal": {
       "markedAs": "Marked as {{status}}.",
-      "defaultNoteApproved": "Reviewed: proposal accepted.",
-      "defaultNoteRejected": "Reviewed: place not added.",
+      "defaultNoteApproved": "Approved.",
+      "defaultNoteRejected": "Rejected.",
       "approveTitle": "Approve proposal",
       "rejectTitle": "Reject proposal",
       "resolutionNoteOptional": "Resolution note (optional)."

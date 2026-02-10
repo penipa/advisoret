@@ -102,16 +102,16 @@
     },
     "reviewSuggestion": {
       "markedAs": "Marcado como {{status}}.",
-      "defaultNoteApproved": "Revisado: se acepta el reporte.",
-      "defaultNoteRejected": "Revisado: no se aplica ningún cambio.",
+      "defaultNoteApproved": "Aprobado.",
+      "defaultNoteRejected": "Rechazado.",
       "approveTitle": "Aprobar reporte",
       "rejectTitle": "Rechazar reporte",
       "resolutionNoteOptional": "Nota de resolución (opcional)."
     },
     "reviewProposal": {
       "markedAs": "Marcado como {{status}}.",
-      "defaultNoteApproved": "Revisado: se acepta la propuesta.",
-      "defaultNoteRejected": "Revisado: no se añade el local.",
+      "defaultNoteApproved": "Aprobada.",
+      "defaultNoteRejected": "Rechazada.",
       "approveTitle": "Aprobar propuesta",
       "rejectTitle": "Rechazar propuesta",
       "resolutionNoteOptional": "Nota de resolución (opcional)."
