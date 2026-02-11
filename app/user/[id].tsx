@@ -33,6 +33,13 @@ type VenueMini = {
   address_text: string | null;
 };
 
+type BadgeStats = {
+  activeDays30: number;
+  uniqueVenues30: number;
+  ratingsCount30: number;
+  kudosReceived30: number;
+};
+
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("es-ES", {
@@ -68,6 +75,8 @@ export default function UserProfileScreen() {
   const [kudosCountByRatingId, setKudosCountByRatingId] = useState<Record<string, number>>({});
   const [myKudosSet, setMyKudosSet] = useState<Set<string>>(new Set());
   const [kudosLoadingByRatingId, setKudosLoadingByRatingId] = useState<Record<string, boolean>>({});
+  const [badgeStats, setBadgeStats] = useState<BadgeStats | null>(null);
+  const [badgeLoading, setBadgeLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const headerTitle = useMemo(() => profile?.display_name ?? profile?.username ?? "", [profile?.display_name, profile?.username]);
@@ -77,6 +86,73 @@ export default function UserProfileScreen() {
     if (label) return label;
     return profileId ? `@${shortId(profileId)}` : t("user.userFallback");
   }, [profile, profileId, t]);
+
+  useEffect(() => {
+    if (!profileId) {
+      setBadgeStats(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setBadgeLoading(true);
+      try {
+        const sinceIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const ratingsRes = await supabase
+          .from("ratings")
+          .select("id, venue_id, created_at")
+          .eq("user_id", profileId)
+          .gte("created_at", sinceIso)
+          .limit(2000);
+
+        if (ratingsRes.error) throw new Error(ratingsRes.error.message);
+
+        const ratingsRows = (ratingsRes.data ?? []) as Array<{ id: string; venue_id: string | null; created_at: string }>;
+        const ratingsCount30 = ratingsRows.length;
+        const activeDaysSet = new Set<string>();
+        const venueSet = new Set<string>();
+        const ratingIds: string[] = [];
+
+        for (const row of ratingsRows) {
+          if (row.created_at) activeDaysSet.add(row.created_at.slice(0, 10));
+          if (row.venue_id) venueSet.add(row.venue_id);
+          if (row.id) ratingIds.push(row.id);
+        }
+
+        let kudosReceived30 = 0;
+        if (ratingIds.length > 0) {
+          const kudosRes = await supabase.from("rating_kudos").select("rating_id").in("rating_id", ratingIds).limit(5000);
+          if (kudosRes.error) {
+            Alert.alert(t("common.error"), kudosRes.error.message ?? "");
+          } else {
+            kudosReceived30 = (kudosRes.data ?? []).length;
+          }
+        }
+
+        if (!cancelled) {
+          setBadgeStats({
+            activeDays30: activeDaysSet.size,
+            uniqueVenues30: venueSet.size,
+            ratingsCount30,
+            kudosReceived30,
+          });
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          Alert.alert(t("common.error"), e?.message ?? "");
+          setBadgeStats(null);
+        }
+      } finally {
+        if (!cancelled) setBadgeLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profileId, t]);
 
   useEffect(() => {
     if (!profileId) return;
@@ -295,6 +371,55 @@ export default function UserProfileScreen() {
             {error}
           </TText>
         )}
+
+        {badgeStats && !badgeLoading ? (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.xs, marginTop: theme.spacing.md }}>
+            <View
+              style={{
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.sm,
+                borderRadius: theme.radius.pill,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <TText weight="700">⏱ {badgeStats.activeDays30}</TText>
+            </View>
+            <View
+              style={{
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.sm,
+                borderRadius: theme.radius.pill,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <TText weight="700">◎ {badgeStats.uniqueVenues30}</TText>
+            </View>
+            <View
+              style={{
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.sm,
+                borderRadius: theme.radius.pill,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <TText weight="700"># {badgeStats.ratingsCount30}</TText>
+            </View>
+            <View
+              style={{
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.sm,
+                borderRadius: theme.radius.pill,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <TText weight="700">♥ {badgeStats.kudosReceived30}</TText>
+            </View>
+          </View>
+        ) : null}
 
         <View style={{ marginTop: theme.spacing.lg }}>
           {activityLoading ? (
