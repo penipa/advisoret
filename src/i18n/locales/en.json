@@ -348,6 +348,7 @@
   },
   "follows": {
     "title": "Follows",
+    "suggested": "Suggested",
     "following": "Following",
     "followers": "Followers",
     "emptyFollowing": "You are not following anyone yet",
@@ -421,3 +422,4 @@
     }
   }
 }
+

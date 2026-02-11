@@ -190,6 +190,7 @@ export default function FollowsScreen() {
         {suggested.length > 0 && !suggestedLoading ? (
           <TCard style={{ marginBottom: 10 }}>
             <View style={{ gap: 10 as any }}>
+              <TText weight="800">{t("follows.suggested")}</TText>
               {suggested.map((row) => {
                 const label = (row.display_name ?? "").trim() || (row.username ? `@${row.username}` : "");
                 return (
@@ -307,3 +308,4 @@ export default function FollowsScreen() {
     </SafeAreaView>
   );
 }
+
