@@ -192,8 +192,8 @@ export default function VenueScreen() {
   // <SECTION:STATE_CORE>
   const [venue, setVenue] = useState<Venue | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
-  const [followingRatings, setFollowingRatings] = useState<ReviewRow[]>([]);
-  const [followingRatingsLoading, setFollowingRatingsLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [followedIds, setFollowedIds] = useState<string[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileMini>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -319,6 +319,7 @@ const loadVenue = useCallback(async () => {
 
     setVenue(v as Venue);
     const uid = await getMyUserId();
+    setCurrentUserId(uid);
 
     // Puntuación a mostrar = media REAL basada en vw_rating_overall_current (solo current)
     const stats = await supabase
@@ -353,43 +354,22 @@ const loadVenue = useCallback(async () => {
       setReviews((r.data ?? []) as any);
     }
 
-    let fetchedFollowingRatings: ReviewRow[] = [];
     if (!uid) {
-      setFollowingRatings([]);
-      setFollowingRatingsLoading(false);
+      setFollowedIds([]);
     } else {
-      setFollowingRatingsLoading(true);
       try {
         const f = await supabase.from("user_follows").select("followed_id").eq("follower_id", uid);
         if (f.error) throw new Error(f.error.message);
 
         const followedIds = Array.from(new Set(((f.data ?? []) as Array<{ followed_id: string }>).map((x) => x.followed_id)));
-        if (followedIds.length === 0) {
-          setFollowingRatings([]);
-        } else {
-          const fr = await supabase
-            .from("vw_rating_overall")
-            .select("rating_id, user_id, created_at, price_eur, comment, overall_score, product_type_id")
-            .eq("venue_id", id)
-            .in("user_id", followedIds)
-            .order("created_at", { ascending: false })
-            .limit(10);
-
-          if (fr.error) throw new Error(fr.error.message);
-          fetchedFollowingRatings = ((fr.data ?? []) as any) as ReviewRow[];
-          setFollowingRatings(fetchedFollowingRatings);
-        }
+        setFollowedIds(followedIds);
       } catch (e: any) {
-        setFollowingRatings([]);
+        setFollowedIds([]);
         Alert.alert(t("common.error"), e?.message ?? "");
-      } finally {
-        setFollowingRatingsLoading(false);
       }
     }
 
-    const userIds = Array.from(
-      new Set([...(r.data ?? []).map((x: any) => x.user_id), ...fetchedFollowingRatings.map((x) => x.user_id)].filter(Boolean))
-    );
+    const userIds = Array.from(new Set([...(r.data ?? []).map((x: any) => x.user_id)].filter(Boolean)));
     if (userIds.length) {
       const p = await supabase.from("profiles").select("id,display_name,avatar_url").in("id", userIds);
       if (!p.error) {
@@ -558,10 +538,7 @@ const loadReviewBreakdown = useCallback(
   const hasCoords = useMemo(() => safeLatLon(venue?.lat, venue?.lon), [venue?.lat, venue?.lon]);
 
   const reportDisabled = useMemo(() => Boolean(myReport), [myReport]);
-  const followingRatingIds = useMemo(
-    () => new Set(followingRatings.map((r) => (r.rating_id ? `id:${r.rating_id}` : `fallback:${r.user_id}:${r.created_at}`))),
-    [followingRatings]
-  );
+  const followedIdSet = useMemo(() => new Set(followedIds), [followedIds]);
   // </SECTION:DERIVED>
 
   // <SECTION:NAV_HELPERS>
@@ -1053,56 +1030,6 @@ const submitVenueReport = useCallback(
             </View>
             {/* </SECTION:RENDER_SCORE_AND_BREAKDOWN> */}
 
-            {followingRatingsLoading ? null : followingRatings.length > 0 ? (
-              <View style={{ marginTop: theme.spacing.lg }}>
-                <View style={{ marginTop: theme.spacing.sm }}>
-                  {followingRatings.map((r) => {
-                    const p = profiles[r.user_id];
-                    return (
-                      <View key={r.rating_id} style={{ marginBottom: theme.spacing.sm }}>
-                        <Pressable onPress={() => goUser(r.user_id)}>
-                          <TCard>
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                              <View style={{ flex: 1, paddingRight: 12 }}>
-                                <TText weight="800" numberOfLines={1}>
-                                  {p?.display_name ?? t("venue.userFallback")}
-                                </TText>
-                                <TText muted style={{ marginTop: 6 }}>
-                                  {fmtDate(r.created_at)}
-                                  {r.price_eur != null ? ` · ${fmtMoney(r.price_eur)}` : ""}
-                                </TText>
-                              </View>
-
-                              <View
-                                style={{
-                                  paddingHorizontal: 10,
-                                  paddingVertical: 6,
-                                  borderRadius: 999,
-                                  borderWidth: 1,
-                                  borderColor: theme.colors.border,
-                                  backgroundColor: theme.colors.surface2,
-                                  minWidth: 54,
-                                  alignItems: "center",
-                                }}
-                              >
-                                <TText weight="800">{Number(r.overall_score ?? 0).toFixed(1)}</TText>
-                              </View>
-                            </View>
-
-                            {r.comment ? (
-                              <TText style={{ marginTop: 12, lineHeight: 20 }} muted>
-                                {r.comment}
-                              </TText>
-                            ) : null}
-                          </TCard>
-                        </Pressable>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            ) : null}
-
             {/* <SECTION:RENDER_REVIEWS> */}
             <View style={{ marginTop: theme.spacing.lg }}>
               <TText size={theme.font.h2} weight="700">
@@ -1116,8 +1043,6 @@ const submitVenueReport = useCallback(
               ) : (
                 <View style={{ marginTop: theme.spacing.sm }}>
                   {reviews.map((r) => {
-                    const reviewDedupKey = r.rating_id ? `id:${r.rating_id}` : `fallback:${r.user_id}:${r.created_at}`;
-                    if (followingRatingIds.has(reviewDedupKey)) return null;
                     const p = profiles[r.user_id];
 
                     const open = Boolean(reviewBreakdownOpen[r.rating_id]);
@@ -1133,6 +1058,7 @@ const submitVenueReport = useCallback(
                               <View style={{ flex: 1, paddingRight: 12 }}>
                                 <TText weight="800" numberOfLines={1}>
                                   {p?.display_name ?? t("venue.userFallback")}
+                                  {currentUserId && followedIdSet.has(r.user_id) ? " ★" : ""}
                                 </TText>
                                 <TText muted style={{ marginTop: 6 }}>
                                   {fmtDate(r.created_at)}

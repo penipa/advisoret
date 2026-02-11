@@ -16,19 +16,6 @@ type Profile = {
   username: string | null;
 };
 
-type RatingRow = {
-  venue_id: string;
-  overall_score: number;
-  created_at: string;
-};
-
-type VenueMini = {
-  id: string;
-  name: string;
-  city: string;
-  address_text?: string | null;
-};
-
 type ActivityItem = {
   rating_id: string;
   venue_id: string;
@@ -37,6 +24,13 @@ type ActivityItem = {
   price_eur: number | null;
   comment: string | null;
   overall_score: number | null;
+};
+
+type VenueMini = {
+  id: string;
+  name: string | null;
+  city: string | null;
+  address_text: string | null;
 };
 
 function fmtDate(iso: string) {
@@ -68,13 +62,12 @@ export default function UserProfileScreen() {
   const [followLoading, setFollowLoading] = useState<boolean>(false);
   const [followInitLoading, setFollowInitLoading] = useState<boolean>(true);
 
-  const [venues, setVenues] = useState<Array<{ venue: VenueMini; score: number; created_at: string }>>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [activityLoading, setActivityLoading] = useState<boolean>(true);
+  const [venueById, setVenueById] = useState<Record<string, VenueMini>>({});
   const [kudosCountByRatingId, setKudosCountByRatingId] = useState<Record<string, number>>({});
   const [myKudosSet, setMyKudosSet] = useState<Set<string>>(new Set());
   const [kudosLoadingByRatingId, setKudosLoadingByRatingId] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const headerTitle = useMemo(() => profile?.display_name ?? profile?.username ?? "", [profile?.display_name, profile?.username]);
@@ -89,7 +82,6 @@ export default function UserProfileScreen() {
     if (!profileId) return;
 
     (async () => {
-      setLoading(true);
       setError(null);
       setFollowInitLoading(true);
       setActivityLoading(true);
@@ -122,49 +114,6 @@ export default function UserProfileScreen() {
           }
         }
 
-        // Recomendaciones (últimas valoraciones → dedupe venues)
-        const rr = await supabase
-          .from("vw_rating_overall")
-          .select("venue_id,overall_score,created_at")
-          .eq("user_id", profileId)
-          .order("created_at", { ascending: false })
-          .limit(200);
-
-        if (rr.error) throw new Error(rr.error.message);
-
-        const seen = new Set<string>();
-        const ordered: Array<{ venue_id: string; score: number; created_at: string }> = [];
-        for (const row of (rr.data ?? []) as any[]) {
-          const vid = row.venue_id as string;
-          if (!vid || seen.has(vid)) continue;
-          seen.add(vid);
-          ordered.push({ venue_id: vid, score: Number(row.overall_score ?? 0), created_at: row.created_at });
-          if (ordered.length >= 25) break;
-        }
-
-        if (ordered.length === 0) {
-          setVenues([]);
-          setLoading(false);
-          return;
-        }
-
-        const ids = ordered.map((x) => x.venue_id);
-        const vv = await supabase.from("venues").select("id,name,city,address_text").in("id", ids);
-        if (vv.error) throw new Error(vv.error.message);
-
-        const map = new Map<string, VenueMini>();
-        for (const v of (vv.data ?? []) as any[]) map.set(v.id, v);
-
-        const final = ordered
-          .map((x) => {
-            const v = map.get(x.venue_id);
-            if (!v) return null;
-            return { venue: v, score: x.score, created_at: x.created_at };
-          })
-          .filter(Boolean) as Array<{ venue: VenueMini; score: number; created_at: string }>;
-
-        setVenues(final);
-
         const activityRes = await supabase
           .from("vw_rating_overall")
           .select("rating_id, venue_id, product_type_id, created_at, price_eur, comment, overall_score")
@@ -175,15 +124,33 @@ export default function UserProfileScreen() {
         if (activityRes.error) {
           Alert.alert(t("common.error"), activityRes.error.message ?? "");
           setActivity([]);
+          setVenueById({});
         } else {
-          setActivity((activityRes.data ?? []) as ActivityItem[]);
+          const nextActivity = (activityRes.data ?? []) as ActivityItem[];
+          setActivity(nextActivity);
+
+          const venueIds = Array.from(new Set(nextActivity.map((a) => a.venue_id).filter(Boolean)));
+          if (venueIds.length === 0) {
+            setVenueById({});
+          } else {
+            const venuesRes = await supabase.from("venues").select("id,name,city,address_text").in("id", venueIds);
+            if (venuesRes.error) {
+              Alert.alert(t("common.error"), venuesRes.error.message ?? "");
+              setVenueById({});
+            } else {
+              const map: Record<string, VenueMini> = {};
+              for (const v of (venuesRes.data ?? []) as VenueMini[]) {
+                map[v.id] = v;
+              }
+              setVenueById(map);
+            }
+          }
         }
       } catch (e: any) {
         setError(e?.message ?? String(e));
       } finally {
         setFollowInitLoading(false);
         setActivityLoading(false);
-        setLoading(false);
       }
     })();
   }, [profileId, t]);
@@ -330,58 +297,6 @@ export default function UserProfileScreen() {
         )}
 
         <View style={{ marginTop: theme.spacing.lg }}>
-          <TText size={theme.font.h2} weight="700">
-            {t("user.recommendations")}
-          </TText>
-
-          {loading ? (
-            <TText muted style={{ marginTop: 10 }}>
-              {t("common.loading")}
-            </TText>
-          ) : venues.length === 0 ? (
-            <TText muted style={{ marginTop: 10 }}>
-              {t("user.noRatings")}
-            </TText>
-          ) : (
-            <View style={{ marginTop: theme.spacing.sm }}>
-              {venues.map((it) => (
-                <Pressable key={`${it.venue.id}-${it.created_at}`} onPress={() => goVenue(it.venue.id)}>
-                  <TCard style={{ marginBottom: theme.spacing.sm }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                      <View style={{ flex: 1, paddingRight: 10 }}>
-                        <TText weight="800">{it.venue.name}</TText>
-                        <TText muted style={{ marginTop: 6 }}>
-                          {it.venue.city}
-                          {it.venue.address_text ? ` · ${it.venue.address_text}` : ""}
-                        </TText>
-                        <TText muted style={{ marginTop: 6 }}>
-                          {fmtDate(it.created_at)}
-                        </TText>
-                      </View>
-
-                      <View
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: theme.colors.border,
-                          backgroundColor: "transparent",
-                        }}
-                      >
-                        <TText size={12} weight="800" style={{ color: "#C9A35C" }}>
-                          {Number(it.score ?? 0).toFixed(1)}
-                        </TText>
-                      </View>
-                    </View>
-                  </TCard>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={{ marginTop: theme.spacing.lg }}>
           {activityLoading ? (
             <TText muted style={{ marginTop: 10 }}>
               {t("common.loading")}
@@ -392,6 +307,13 @@ export default function UserProfileScreen() {
                 <Pressable key={it.rating_id} onPress={() => goVenue(it.venue_id)}>
                   <TCard style={{ marginBottom: theme.spacing.sm }}>
                     <View style={{ gap: 6 }}>
+                      {venueById[it.venue_id]?.name ? <TText weight="800">{venueById[it.venue_id]?.name}</TText> : null}
+                      {venueById[it.venue_id]?.city || venueById[it.venue_id]?.address_text ? (
+                        <TText muted>
+                          {[venueById[it.venue_id]?.city, venueById[it.venue_id]?.address_text].filter(Boolean).join(" · ")}
+                        </TText>
+                      ) : null}
+
                       {it.overall_score != null ? (
                         <TText weight="800">
                           {t("venue.scoreTitle")}: {Number(it.overall_score).toFixed(1)}
