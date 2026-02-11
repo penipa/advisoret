@@ -341,6 +341,11 @@
     "following": "Following",
     "recommendations": "Recommendations",
     "noRatings": "No ratings yet.",
+    "badges30dTitle": "Last 30 days",
+    "badgeActiveDays": "⏱ Active days: distinct days with ratings",
+    "badgeUniqueVenues": "◎ Unique venues: distinct venues rated",
+    "badgeRatingsCount": "# Ratings: total number of ratings",
+    "badgeKudosReceived": "♥ Kudos received: kudos on your ratings",
     "errors": {
       "updateFailedTitle": "Could not update",
       "tryAgain": "Please try again."
@@ -349,8 +354,10 @@
   "follows": {
     "title": "Follows",
     "suggested": "Suggested",
+    "suggestedHint": "Ranked by kudos received and activity (30d)",
     "following": "Following",
     "followers": "Followers",
+    "followersLabel": "Followers",
     "emptyFollowing": "You are not following anyone yet",
     "emptyFollowers": "You don't have followers yet"
   },
@@ -422,4 +429,5 @@
     }
   }
 }
+
 

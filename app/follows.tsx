@@ -187,53 +187,6 @@ export default function FollowsScreen() {
       <Stack.Screen options={{ title: t("follows.title"), headerBackTitle: t("common.back") }} />
 
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40 }}>
-        {suggested.length > 0 && !suggestedLoading ? (
-          <TCard style={{ marginBottom: 10 }}>
-            <View style={{ gap: 10 as any }}>
-              <TText weight="800">{t("follows.suggested")}</TText>
-              {suggested.map((row) => {
-                const label = (row.display_name ?? "").trim() || (row.username ? `@${row.username}` : "");
-                return (
-                  <View
-                    key={`suggested-${row.user_id}`}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      paddingVertical: 10,
-                      borderBottomWidth: 1,
-                      borderBottomColor: theme.colors.border,
-                    }}
-                  >
-                    <Pressable onPress={() => openUser(row.user_id)} style={{ flex: 1, paddingRight: 12 }}>
-                      <TText weight="700">{label}</TText>
-                      {row.username ? <TText muted style={{ marginTop: 4 }}>{`@${row.username}`}</TText> : null}
-                    </Pressable>
-
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 as any }}>
-                      <TText size={12} muted>{`♥ ${row.kudos_received_30d ?? 0}  ⏱ ${row.active_days_30d ?? 0}`}</TText>
-                      <Pressable
-                        onPress={() => void followSuggested(row)}
-                        disabled={!!followLoadingByUserId[row.user_id]}
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 6,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: theme.colors.border,
-                          opacity: followLoadingByUserId[row.user_id] ? 0.5 : 1,
-                        }}
-                      >
-                        <TText weight="800">+</TText>
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </TCard>
-        ) : null}
-
         <View style={{ flexDirection: "row", gap: 10 as any }}>
           <Pressable
             onPress={() => setActiveTab("following")}
@@ -277,6 +230,19 @@ export default function FollowsScreen() {
             <TText muted>{activeTab === "following" ? t("follows.emptyFollowing") : t("follows.emptyFollowers")}</TText>
           ) : (
             <View style={{ gap: 10 as any }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 2,
+                }}
+              >
+                <View style={{ flex: 1, paddingRight: 12 }} />
+                <TText size={11} muted style={{ opacity: 0.7 }}>
+                  {t("follows.followersLabel")}
+                </TText>
+              </View>
               {rows.map((row) => {
                 const label = (row.display_name ?? "").trim() || (row.username ? `@${row.username}` : "");
                 const fallback = row.username ? `@${row.username}` : row.user_id;
@@ -304,8 +270,61 @@ export default function FollowsScreen() {
             </View>
           )}
         </TCard>
+
+        {suggested.length > 0 && !suggestedLoading ? (
+          <TCard style={{ marginTop: 10 }}>
+            <View style={{ gap: 10 as any }}>
+              <View>
+                <TText weight="800">{t("follows.suggested")}</TText>
+                <TText muted size={12} style={{ marginTop: 4 }}>
+                  {t("follows.suggestedHint")}
+                </TText>
+              </View>
+              {suggested.map((row) => {
+                const label = (row.display_name ?? "").trim() || (row.username ? `@${row.username}` : "");
+                return (
+                  <View
+                    key={`suggested-${row.user_id}`}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingVertical: 10,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
+                    }}
+                  >
+                    <Pressable onPress={() => openUser(row.user_id)} style={{ flex: 1, paddingRight: 12 }}>
+                      <TText weight="700">{label}</TText>
+                      {row.username ? <TText muted style={{ marginTop: 4 }}>{`@${row.username}`}</TText> : null}
+                    </Pressable>
+
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 as any }}>
+                      <TText size={12} muted>{`♥ ${row.kudos_received_30d ?? 0}  ⏱ ${row.active_days_30d ?? 0}`}</TText>
+                      <Pressable
+                        onPress={() => void followSuggested(row)}
+                        disabled={!!followLoadingByUserId[row.user_id]}
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: theme.colors.border,
+                          opacity: followLoadingByUserId[row.user_id] ? 0.5 : 1,
+                        }}
+                      >
+                        <TText weight="800">+</TText>
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </TCard>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
