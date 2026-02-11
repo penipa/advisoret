@@ -96,6 +96,17 @@ type NearVenue = {
 
 type ChipKey = "all" | "city" | "following" | "mine";
 type AwardFilter = "all" | "awarded" | "no_award";
+
+type ActivityRow = {
+  rating_id: string;
+  venue_id: string;
+  user_id: string;
+  created_at: string;
+  price_eur: number | null;
+  comment: string | null;
+  overall_score: number | null;
+  product_type_id: string | null;
+};
 // </SECTION:TYPES>
 
 // <SECTION:HELPERS_TEXT_FORMAT>
@@ -110,6 +121,18 @@ function fmtKm(km: number) {
   if (km < 1) return String(Math.round(km * 1000)) + " " + i18n.t("home.units.m");
   if (km < 10) return km.toFixed(1) + " " + i18n.t("home.units.km");
   return String(Math.round(km)) + " " + i18n.t("home.units.km");
+}
+
+function fmtFeedDate(iso: string, lang: string) {
+  try {
+    return new Date(iso).toLocaleDateString(lang || undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
 }
 // </SECTION:HELPERS_TEXT_FORMAT>
 
@@ -626,6 +649,21 @@ const ESMORZARET_PRODUCT_TYPE_ID = "5b0af5a5-e73a-4381-9796-c6676c285206";
   const [meId, setMeId] = useState<string | null>(null);
   // </SECTION:STATE_EXPLORE>
 
+  // <SECTION:STATE_FEED>
+  const [followingFeed, setFollowingFeed] = useState<ActivityRow[]>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [followedIds, setFollowedIds] = useState<string[]>([]);
+  const [profilesById, setProfilesById] = useState<
+    Record<string, { username?: string; display_name?: string; avatar_url?: string }>
+  >({});
+  const [venuesById, setVenuesById] = useState<
+    Record<string, { name?: string; city?: string; address_text?: string }>
+  >({});
+  const [kudosCountByRatingId, setKudosCountByRatingId] = useState<Record<string, number>>({});
+  const [myKudosSet, setMyKudosSet] = useState<Set<string>>(new Set());
+  const [kudosLoadingByRatingId, setKudosLoadingByRatingId] = useState<Record<string, boolean>>({});
+  // </SECTION:STATE_FEED>
+
 // <SECTION:STATE_PREMIUM_CONTENT>
 // Premium default content
 
@@ -650,6 +688,10 @@ const [locDenied, setLocDenied] = useState(false);
   // <SECTION:NAV_HELPERS>
   const goVenue = (venueId: string) => {
     router.push({ pathname: "/venue/[id]", params: { id: venueId } });
+  };
+
+  const goUser = (userId: string) => {
+    router.push({ pathname: "/user/[id]", params: { id: userId } });
   };
 
   // Navegar a la pestaña "Explorar" (listado infinito) con filtros actuales
@@ -732,6 +774,189 @@ const loadRankings = async () => {
   }
 };
 // </SECTION:LOADERS_RANKINGS>
+
+  // <SECTION:LOADERS_FOLLOWING_FEED>
+  const loadFollowingFeed = useCallback(async () => {
+    if (!meId) {
+      setFollowedIds([]);
+      setFollowingFeed([]);
+      setProfilesById({});
+      setVenuesById({});
+      setKudosCountByRatingId({});
+      setMyKudosSet(new Set());
+      setFeedLoading(false);
+      return;
+    }
+
+    setFeedLoading(true);
+    try {
+      const followsRes = await supabase.from("user_follows").select("followed_id").eq("follower_id", meId);
+      if (followsRes.error) throw new Error(followsRes.error.message);
+
+      const ids = Array.from(
+        new Set(
+          ((followsRes.data ?? []) as Array<{ followed_id: string | null }>)
+            .map((r) => r.followed_id ?? "")
+            .filter(Boolean)
+        )
+      );
+      setFollowedIds(ids);
+
+      if (ids.length === 0) {
+        setFollowingFeed([]);
+        setProfilesById({});
+        setVenuesById({});
+        setKudosCountByRatingId({});
+        setMyKudosSet(new Set());
+        return;
+      }
+
+      const feedRes = await supabase
+        .from("vw_rating_overall")
+        .select("rating_id, venue_id, user_id, created_at, price_eur, comment, overall_score, product_type_id")
+        .in("user_id", ids)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (feedRes.error) throw new Error(feedRes.error.message);
+
+      const rows = (feedRes.data ?? []) as ActivityRow[];
+      setFollowingFeed(rows);
+
+      const userIds = Array.from(new Set(rows.map((x) => x.user_id).filter(Boolean)));
+      const venueIds = Array.from(new Set(rows.map((x) => x.venue_id).filter(Boolean)));
+      const ratingIds = Array.from(new Set(rows.map((x) => x.rating_id).filter(Boolean)));
+
+      if (userIds.length > 0) {
+        const profilesRes = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .in("id", userIds);
+        if (profilesRes.error) {
+          Alert.alert(t("common.error"), profilesRes.error.message ?? "");
+        } else {
+          const map: Record<string, { username?: string; display_name?: string; avatar_url?: string }> = {};
+          for (const p of (profilesRes.data ?? []) as Array<{
+            id: string;
+            username: string | null;
+            display_name: string | null;
+            avatar_url: string | null;
+          }>) {
+            map[p.id] = {
+              username: p.username ?? undefined,
+              display_name: p.display_name ?? undefined,
+              avatar_url: p.avatar_url ?? undefined,
+            };
+          }
+          setProfilesById(map);
+        }
+      } else {
+        setProfilesById({});
+      }
+
+      if (venueIds.length > 0) {
+        const venuesRes = await supabase.from("venues").select("id, name, city, address_text").in("id", venueIds);
+        if (venuesRes.error) {
+          Alert.alert(t("common.error"), venuesRes.error.message ?? "");
+        } else {
+          const map: Record<string, { name?: string; city?: string; address_text?: string }> = {};
+          for (const v of (venuesRes.data ?? []) as Array<{
+            id: string;
+            name: string | null;
+            city: string | null;
+            address_text: string | null;
+          }>) {
+            map[v.id] = {
+              name: v.name ?? undefined,
+              city: v.city ?? undefined,
+              address_text: v.address_text ?? undefined,
+            };
+          }
+          setVenuesById(map);
+        }
+      } else {
+        setVenuesById({});
+      }
+
+      if (ratingIds.length > 0) {
+        const countsRes = await supabase.from("rating_kudos").select("rating_id").in("rating_id", ratingIds);
+        if (countsRes.error) {
+          Alert.alert(t("common.error"), countsRes.error.message ?? "");
+        } else {
+          const counts: Record<string, number> = {};
+          for (const row of (countsRes.data ?? []) as Array<{ rating_id: string }>) {
+            counts[row.rating_id] = (counts[row.rating_id] ?? 0) + 1;
+          }
+          setKudosCountByRatingId(counts);
+        }
+
+        const mineRes = await supabase
+          .from("rating_kudos")
+          .select("rating_id")
+          .eq("user_id", meId)
+          .in("rating_id", ratingIds);
+        if (mineRes.error) {
+          Alert.alert(t("common.error"), mineRes.error.message ?? "");
+        } else {
+          setMyKudosSet(new Set((mineRes.data ?? []).map((r) => r.rating_id)));
+        }
+      } else {
+        setKudosCountByRatingId({});
+        setMyKudosSet(new Set());
+      }
+    } catch (e: any) {
+      Alert.alert(t("common.error"), e?.message ?? "");
+      setFollowedIds([]);
+      setFollowingFeed([]);
+      setProfilesById({});
+      setVenuesById({});
+      setKudosCountByRatingId({});
+      setMyKudosSet(new Set());
+    } finally {
+      setFeedLoading(false);
+    }
+  }, [meId, t]);
+
+  const toggleKudos = async (ratingId: string) => {
+    if (!meId || !ratingId) return;
+
+    setKudosLoadingByRatingId((prev) => ({ ...prev, [ratingId]: true }));
+    try {
+      const hasKudos = myKudosSet.has(ratingId);
+      if (hasKudos) {
+        const delRes = await supabase.from("rating_kudos").delete().eq("rating_id", ratingId).eq("user_id", meId);
+        if (delRes.error) throw new Error(delRes.error.message);
+
+        setMyKudosSet((prev) => {
+          const next = new Set(prev);
+          next.delete(ratingId);
+          return next;
+        });
+        setKudosCountByRatingId((prev) => ({
+          ...prev,
+          [ratingId]: Math.max(0, (prev[ratingId] ?? 0) - 1),
+        }));
+      } else {
+        const insRes = await supabase.from("rating_kudos").insert({ rating_id: ratingId, user_id: meId });
+        if (insRes.error) throw new Error(insRes.error.message);
+
+        setMyKudosSet((prev) => {
+          const next = new Set(prev);
+          next.add(ratingId);
+          return next;
+        });
+        setKudosCountByRatingId((prev) => ({
+          ...prev,
+          [ratingId]: (prev[ratingId] ?? 0) + 1,
+        }));
+      }
+    } catch (e: any) {
+      Alert.alert(t("common.error"), e?.message ?? "");
+    } finally {
+      setKudosLoadingByRatingId((prev) => ({ ...prev, [ratingId]: false }));
+    }
+  };
+  // </SECTION:LOADERS_FOLLOWING_FEED>
 
 
 // <SECTION:LOADERS_FEATURED>
@@ -1095,12 +1320,17 @@ const loadNew = async () => {
   }, [selectedCity, t]);
   // </SECTION:EXPLORE_LOGIC>
 
+  useEffect(() => {
+    void loadFollowingFeed();
+  }, [loadFollowingFeed]);
+
 // <SECTION:FOCUS_EFFECT>
 useFocusEffect(
   useCallback(() => {
     setCoverBust(Date.now());
 
     loadRankings().catch((e: any) => setError(e?.message ?? String(e)));
+    void loadFollowingFeed();
     void loadExplore();
     void loadFeatured(); // ✅ destacados
     void loadNew();
@@ -1108,7 +1338,7 @@ useFocusEffect(
     if (!shouldShowExplore) {
       void requestAndLoadNear();
     }
-  }, [loadExplore, shouldShowExplore])
+  }, [loadExplore, loadFollowingFeed, shouldShowExplore])
 );
 // </SECTION:FOCUS_EFFECT>
 
@@ -1180,6 +1410,65 @@ return (
               </TText>
             )}
           </View>
+
+          {meId && (feedLoading || followedIds.length > 0) ? (
+            <View style={{ marginBottom: theme.spacing.lg }}>
+              {feedLoading ? (
+                <TText muted style={{ marginTop: 10 }}>
+                  {t("common.loading")}
+                </TText>
+              ) : followingFeed.length > 0 ? (
+                <View style={{ marginTop: theme.spacing.sm }}>
+                  {followingFeed.map((it) => {
+                    const profile = profilesById[it.user_id];
+                    const venue = venuesById[it.venue_id];
+                    const author = (profile?.display_name ?? profile?.username ?? "").trim();
+                    const venueLine = [venue?.name, venue?.city].filter(Boolean).join(" · ");
+                    return (
+                      <Pressable key={it.rating_id} onPress={() => goVenue(it.venue_id)}>
+                        <TCard style={{ marginBottom: theme.spacing.sm }}>
+                          <View style={{ gap: 6 }}>
+                            <Pressable
+                              onPress={() => goUser(it.user_id)}
+                              style={{ alignSelf: "flex-start" }}
+                              hitSlop={8}
+                            >
+                              <TText weight="800">{author}</TText>
+                            </Pressable>
+
+                            {venueLine ? <TText muted>{venueLine}</TText> : null}
+
+                            {it.overall_score != null ? (
+                              <TText weight="800">
+                                {t("venue.scoreTitle")}: {Number(it.overall_score).toFixed(1)}
+                              </TText>
+                            ) : null}
+
+                            {it.comment ? <TText>{it.comment}</TText> : null}
+
+                            <TText muted>{fmtFeedDate(it.created_at, i18n.language)}</TText>
+
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                              <TText muted>{kudosCountByRatingId[it.rating_id] ?? 0}</TText>
+                              <Pressable
+                                onPress={() => void toggleKudos(it.rating_id)}
+                                disabled={!!kudosLoadingByRatingId[it.rating_id]}
+                                style={{ opacity: kudosLoadingByRatingId[it.rating_id] ? 0.5 : 1 }}
+                              >
+                                <TText size={theme.font.h2} weight="700">
+                                  {myKudosSet.has(it.rating_id) ? "♥" : "♡"}
+                                </TText>
+                              </Pressable>
+                            </View>
+                          </View>
+                        </TCard>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
 
           {/* Rankings */}
           {monthRows.length >= 2 ? (
