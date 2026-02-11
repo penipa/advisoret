@@ -374,7 +374,8 @@ export default function UserProfileScreen() {
 
         {badgeStats && !badgeLoading ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.xs, marginTop: theme.spacing.md }}>
-            <View
+            <Pressable
+              onPress={() => Alert.alert(t("user.badges30dTitle"), t("user.badgeActiveDays"))}
               style={{
                 paddingVertical: theme.spacing.xs,
                 paddingHorizontal: theme.spacing.sm,
@@ -384,8 +385,9 @@ export default function UserProfileScreen() {
               }}
             >
               <TText weight="700">⏱ {badgeStats.activeDays30}</TText>
-            </View>
-            <View
+            </Pressable>
+            <Pressable
+              onPress={() => Alert.alert(t("user.badges30dTitle"), t("user.badgeUniqueVenues"))}
               style={{
                 paddingVertical: theme.spacing.xs,
                 paddingHorizontal: theme.spacing.sm,
@@ -395,8 +397,9 @@ export default function UserProfileScreen() {
               }}
             >
               <TText weight="700">◎ {badgeStats.uniqueVenues30}</TText>
-            </View>
-            <View
+            </Pressable>
+            <Pressable
+              onPress={() => Alert.alert(t("user.badges30dTitle"), t("user.badgeRatingsCount"))}
               style={{
                 paddingVertical: theme.spacing.xs,
                 paddingHorizontal: theme.spacing.sm,
@@ -406,8 +409,9 @@ export default function UserProfileScreen() {
               }}
             >
               <TText weight="700"># {badgeStats.ratingsCount30}</TText>
-            </View>
-            <View
+            </Pressable>
+            <Pressable
+              onPress={() => Alert.alert(t("user.badges30dTitle"), t("user.badgeKudosReceived"))}
               style={{
                 paddingVertical: theme.spacing.xs,
                 paddingHorizontal: theme.spacing.sm,
@@ -417,7 +421,7 @@ export default function UserProfileScreen() {
               }}
             >
               <TText weight="700">♥ {badgeStats.kudosReceived30}</TText>
-            </View>
+            </Pressable>
           </View>
         ) : null}
 
