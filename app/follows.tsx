@@ -14,6 +14,7 @@ type FollowRow = {
   display_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  followers_count?: number;
 };
 
 type ActiveTab = "following" | "followers";
@@ -47,13 +48,13 @@ export default function FollowsScreen() {
       const [followingRes, followersRes] = await Promise.all([
         supabase
           .from("vw_following")
-          .select("user_id, username, display_name, avatar_url, created_at")
+          .select("user_id, username, display_name, avatar_url, created_at, followers_count")
           .eq("viewer_id", uid)
           .order("created_at", { ascending: false })
           .limit(200),
         supabase
           .from("vw_followers")
-          .select("user_id, username, display_name, avatar_url, created_at")
+          .select("user_id, username, display_name, avatar_url, created_at, followers_count")
           .eq("viewer_id", uid)
           .order("created_at", { ascending: false })
           .limit(200),
@@ -150,13 +151,19 @@ export default function FollowsScreen() {
                     key={`${activeTab}-${row.user_id}`}
                     onPress={() => openUser(row.user_id)}
                     style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                       paddingVertical: 10,
                       borderBottomWidth: 1,
                       borderBottomColor: theme.colors.border,
                     }}
                   >
-                    <TText weight="700">{label || fallback}</TText>
-                    {row.username ? <TText muted style={{ marginTop: 4 }}>{`@${row.username}`}</TText> : null}
+                    <View style={{ flex: 1, paddingRight: 12 }}>
+                      <TText weight="700">{label || fallback}</TText>
+                      {row.username ? <TText muted style={{ marginTop: 4 }}>{`@${row.username}`}</TText> : null}
+                    </View>
+                    <TText size={12} muted>{row.followers_count ?? 0}</TText>
                   </Pressable>
                 );
               })}
