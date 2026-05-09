@@ -640,6 +640,7 @@ const [newLoading, setNewLoading] = useState(false);
 const [nearRows, setNearRows] = useState<NearVenue[]>([]);
 const [nearLoading, setNearLoading] = useState(false);
 const [locDenied, setLocDenied] = useState(false);
+const [nearRequested, setNearRequested] = useState(false);
 // </SECTION:STATE_PREMIUM_CONTENT>
 
 
@@ -881,6 +882,7 @@ const loadNew = async () => {
 
   // <SECTION:LOADERS_NEAR>
   const requestAndLoadNear = async () => {
+    setNearRequested(true);
     setNearLoading(true);
     setLocDenied(false);
 
@@ -1104,10 +1106,6 @@ useFocusEffect(
     void loadExplore();
     void loadFeatured(); // ✅ destacados
     void loadNew();
-
-    if (!shouldShowExplore) {
-      void requestAndLoadNear();
-    }
   }, [loadExplore, shouldShowExplore])
 );
 // </SECTION:FOCUS_EFFECT>
@@ -1267,7 +1265,7 @@ return (
               </TText>
 
               <TButton
-                title={t("home.refresh")}
+                title={nearRequested ? t("home.refresh") : t("home.useMyLocation")}
                 variant="ghost"
                 onPress={() => void requestAndLoadNear()}
                 style={{ paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start" }}
@@ -1282,6 +1280,10 @@ return (
             ) : locDenied ? (
               <TText muted style={{ marginTop: 10 }}>
                 {t("home.enableLocation")}
+              </TText>
+            ) : !nearRequested ? (
+              <TText muted style={{ marginTop: 10 }}>
+                {t("home.nearbyPermissionHint")}
               </TText>
             ) : nearRows.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>

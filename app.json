@@ -31,6 +31,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Advisoret uses your location to assign or correct a venue's coordinates and place it on the map. For example, when you tap \"Update coordinates here\", we use your current location to save the venue's position."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/branding/splash.png",

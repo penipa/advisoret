@@ -71,6 +71,7 @@ type ReviewRow = {
   comment: string | null;
   price_eur: number | null;
   overall_score: number;
+  strava_activity_url: string | null;
 };
 
 type CriteriaBreakdownRow = {
@@ -343,7 +344,7 @@ const loadVenue = useCallback(async () => {
 
     const r = await supabase
       .from("vw_rating_overall_current")
-      .select("rating_id,user_id,created_at,last_rated_at,comment,price_eur,overall_score")
+      .select("rating_id,user_id,created_at,last_rated_at,comment,price_eur,overall_score,strava_activity_url")
       .eq("venue_id", id)
       .order("last_rated_at", { ascending: false })
       .limit(50);
@@ -581,6 +582,25 @@ const loadReviewBreakdown = useCallback(
     Alert.alert(t("venue.unavailableTitle"), t("venue.cannotOpenMaps"));
   }, [venue, t]);
   // </SECTION:ACTIONS_MAPS>
+
+  const openStravaActivity = useCallback(
+    async (url: string | null) => {
+      const value = (url ?? "").trim();
+      if (!value) return;
+
+      try {
+        const ok = await Linking.canOpenURL(value);
+        if (!ok) {
+          Alert.alert(t("venue.unavailableTitle"), t("venue.cannotOpenStrava"));
+          return;
+        }
+        await Linking.openURL(value);
+      } catch {
+        Alert.alert(t("venue.unavailableTitle"), t("venue.cannotOpenStrava"));
+      }
+    },
+    [t]
+  );
 
   // <SECTION:ACTIONS_ADMIN_COVER>
   const pickAndUploadCover = useCallback(async () => {
@@ -1086,6 +1106,26 @@ const submitVenueReport = useCallback(
                               <TText style={{ marginTop: 12, lineHeight: 20 }} muted>
                                 {r.comment}
                               </TText>
+                            ) : null}
+
+                            {r.strava_activity_url ? (
+                              <Pressable
+                                onPress={() => void openStravaActivity(r.strava_activity_url)}
+                                style={{
+                                  alignSelf: "flex-start",
+                                  marginTop: 12,
+                                  paddingVertical: 8,
+                                  paddingHorizontal: 12,
+                                  borderRadius: 999,
+                                  borderWidth: 1,
+                                  borderColor: "#FC4C02",
+                                  backgroundColor: "#FC4C02",
+                                }}
+                              >
+                                <TText weight="800" style={{ color: "#FFFFFF" }}>
+                                  {t("venue.openStravaActivity")}
+                                </TText>
+                              </Pressable>
                             ) : null}
 
                             {/* Desglose de ESTA reseña */}

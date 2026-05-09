@@ -53,6 +53,33 @@ function monthRangeISO() {
 
   return { startISO: start.toISOString(), endISO: end.toISOString() };
 }
+
+function normalizeOptionalUrl(s: string) {
+  const t = s.trim();
+  return t ? t : null;
+}
+
+function isValidStravaActivityUrl(raw: string) {
+  const value = raw.trim();
+  if (!value) return true;
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== "https:") return false;
+
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (host === "strava.com" || host === "www.strava.com") {
+      return parts.length >= 2 && parts[0] === "activities" && !!parts[1];
+    }
+    if (host === "strava.app.link") {
+      return parts.length >= 1 && !!parts[0];
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 // </SECTION:HELPERS>
 
 // <SECTION:UI_STEPPER>
@@ -114,6 +141,7 @@ export default function RateScreen() {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [price, setPrice] = useState<string>("");
   const [comment, setComment] = useState<string>("");
+  const [stravaActivityUrl, setStravaActivityUrl] = useState<string>("");
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -259,7 +287,7 @@ export default function RateScreen() {
     try {
       const r = await supabase
         .from("ratings")
-        .select("id,comment,price_eur")
+        .select("id,comment,price_eur,strava_activity_url")
         .eq("id", ratingId)
         .single();
 
@@ -281,6 +309,7 @@ export default function RateScreen() {
       setEditRatingId(ratingId);
       setComment(r.data.comment ?? "");
       setPrice(r.data.price_eur != null ? String(r.data.price_eur) : "");
+      setStravaActivityUrl(r.data.strava_activity_url ?? "");
 
       // base: todos los criterios a 4, luego aplicamos los guardados
       setScores((prev) => {
@@ -354,6 +383,10 @@ const saveRating = async () => {
     setSaveErr(t("rate.errors.priceInvalid"));
     return;
   }
+  if (!isValidStravaActivityUrl(stravaActivityUrl)) {
+    setSaveErr(t("rate.errors.stravaUrlInvalid"));
+    return;
+  }
 
   // Guardrail: criterios/scores siempre consistentes
   if (!criteria.length) {
@@ -380,6 +413,7 @@ const saveRating = async () => {
       p_product_type_id: ESMORZARET_PRODUCT_TYPE_ID,
       p_price_eur: parsedPrice,
       p_comment: comment,
+      p_strava_activity_url: normalizeOptionalUrl(stravaActivityUrl),
       p_scores: normalizedScores,
     };
 
@@ -559,6 +593,31 @@ const saveRating = async () => {
                 style={{
                   marginTop: 10,
                   minHeight: 110,
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                  backgroundColor: theme.colors.surface2,
+                  opacity: isBusy ? 0.65 : 1,
+                }}
+              />
+
+              <View style={{ height: theme.spacing.md }} />
+
+              <TText weight="700">{t("rate.stravaActivityUrlLabel")}</TText>
+              <TextInput
+                value={stravaActivityUrl}
+                onChangeText={setStravaActivityUrl}
+                placeholder={t("rate.stravaActivityUrlPlaceholder")}
+                placeholderTextColor={theme.colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                editable={!isBusy}
+                style={{
+                  marginTop: 10,
                   paddingVertical: 12,
                   paddingHorizontal: 12,
                   borderRadius: 14,

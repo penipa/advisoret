@@ -856,6 +856,12 @@ export default function AccountScreen() {
                   style={{ width: "100%" }}
                 />
                 <TButton title={t("account.logout")} onPress={() => void logout()} style={{ width: "100%" }} />
+                <TButton
+                  title={t("account.deleteAccount")}
+                  variant="ghost"
+                  onPress={() => router.push("/account-delete")}
+                  style={{ width: "100%" }}
+                />
               </View>
 
               <View style={{ marginTop: 14, gap: 8 as any }}>
