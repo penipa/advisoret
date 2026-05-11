@@ -2,7 +2,7 @@
   "expo": {
     "name": "Advisoret",
     "slug": "esmorzapp",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/branding/app-icon.png",
     "scheme": "advisoret",
