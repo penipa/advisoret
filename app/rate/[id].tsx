@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "../../src/lib/supabase";
 import { theme } from "../../src/theme";
@@ -145,6 +146,8 @@ export default function RateScreen() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authBoot, setAuthBoot] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -169,9 +172,37 @@ export default function RateScreen() {
   };
   // </SECTION:STATE_CORE>
 
+  // <SECTION:EFFECT_AUTH_GUARD>
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!alive) return;
+        setSession(data.session ?? null);
+      } finally {
+        if (alive) setAuthBoot(false);
+      }
+    })();
+
+    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession ?? null);
+      setAuthBoot(false);
+    });
+
+    return () => {
+      alive = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  // </SECTION:EFFECT_AUTH_GUARD>
+
   // <SECTION:EFFECT_LOAD_VENUE_AND_CRITERIA>
   useEffect(() => {
     if (!id) return;
+    if (!session?.user?.id) return;
 
     (async () => {
       setLoading(true);
@@ -236,7 +267,7 @@ export default function RateScreen() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, session?.user?.id]);
   // </SECTION:EFFECT_LOAD_VENUE_AND_CRITERIA>
 
   // <SECTION:DERIVED_PRICE>
@@ -342,15 +373,12 @@ export default function RateScreen() {
   useEffect(() => {
     if (!id) return;
     if (!criteria.length) return; // necesitamos los criterios para no pisar scores luego
+    if (!session?.user?.id) return;
     if (prefillChecked) return;
     if (editRatingId) return;
 
     (async () => {
       setPrefillChecked(true);
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      if (!session) return;
 
       const userId = session.user.id;
       const existingId = await getThisMonthRatingId(userId);
@@ -362,7 +390,7 @@ export default function RateScreen() {
         );
       }
     })();
-  }, [id, criteria.length, prefillChecked, editRatingId]);
+  }, [id, criteria.length, session?.user?.id, prefillChecked, editRatingId]);
   // </SECTION:EFFECT_PREFILL_THIS_MONTH>
 
 // <SECTION:DB_MUTATIONS>
@@ -447,6 +475,41 @@ const saveRating = async () => {
 // </SECTION:DB_MUTATIONS>
 
   // <SECTION:RENDER>
+  if (authBoot) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+        <View style={{ flex: 1, padding: theme.spacing.md, justifyContent: "center" }}>
+          <TText muted>{t("common.loading")}</TText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!session) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+        <View style={{ flex: 1, padding: theme.spacing.md, justifyContent: "center" }}>
+          <TCard>
+            <TText size={theme.font.h2} weight="800">
+              {t("rate.authRequiredTitle", { defaultValue: "Inicia sesión para valorar" })}
+            </TText>
+            <TText muted style={{ marginTop: 8 }}>
+              {t("rate.authRequiredBody", {
+                defaultValue: "Necesitas iniciar sesión para guardar una reseña.",
+              })}
+            </TText>
+            <View style={{ marginTop: theme.spacing.md }}>
+              <TButton
+                title={t("account.signIn", { defaultValue: "Iniciar sesión" })}
+                onPress={() => router.replace("/auth")}
+              />
+            </View>
+          </TCard>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <KeyboardAvoidingView

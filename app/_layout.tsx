@@ -94,15 +94,10 @@ export default function RootLayout() {
 
   const inAuth = useMemo(() => segments[0] === "auth", [segments]);
 
-  // 2) Redirección estable: si no hay sesión, solo dejamos /auth.
-  //    Si hay sesión, te sacamos de /auth y te llevamos a Tabs.
+  // 2) Redirección estable: si hay sesión, te sacamos de /auth y te llevamos a Tabs.
   useEffect(() => {
     if (boot || langBoot) return;
 
-    if (!session && !inAuth) {
-      router.replace("/auth");
-      return;
-    }
     if (session && inAuth) {
       router.replace("/(tabs)");
     }
