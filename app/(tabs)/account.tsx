@@ -283,6 +283,33 @@ export default function AccountScreen() {
 
   const goLogin = () => router.replace("/auth");
 
+  const clearAccountState = () => {
+    setSession(null);
+    setProfile(null);
+    setProfileLoading(false);
+    setReports([]);
+    setReportsLoading(false);
+    setReportsError(null);
+    setIsAdmin(false);
+    setAdminLoading(false);
+    setAdminError(null);
+    setAdminRows([]);
+    setMyProposals([]);
+    setMyProposalsLoading(false);
+    setMyProposalsError(null);
+    setAdminProposalsLoading(false);
+    setAdminProposalsError(null);
+    setAdminProposals([]);
+    setPendingCounts({ suggestions: 0, proposals: 0 });
+    setAdminProfiles({});
+  };
+
+  const finishLogout = async () => {
+    await supabase.auth.signOut();
+    clearAccountState();
+    router.replace("/(tabs)");
+  };
+
   const applyLanguage = useCallback(
     async (lang: "es" | "en") => {
       try {
@@ -302,8 +329,7 @@ export default function AccountScreen() {
 
   const changeAccount = async () => {
     try {
-      await supabase.auth.signOut();
-      router.replace("/auth");
+      await finishLogout();
     } catch (e: any) {
       Alert.alert(t("common.error"), e?.message ?? t("account.errors.changeAccount"));
     }
@@ -311,8 +337,7 @@ export default function AccountScreen() {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
-      router.replace("/auth");
+      await finishLogout();
     } catch (e: any) {
       Alert.alert(t("common.error"), e?.message ?? t("account.errors.logout"));
     }
