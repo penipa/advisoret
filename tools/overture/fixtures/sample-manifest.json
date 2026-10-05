@@ -1,0 +1,15 @@
+{
+  "provider": "overture",
+  "release": "2026-09-23.1",
+  "schema_version": "v2.0.0",
+  "pipeline_version": "advisoret-overture-pilot-1",
+  "generated_at": "2026-10-05T00:00:00Z",
+  "region": "comunitat_valenciana",
+  "record_count": 4,
+  "search_artifact": {
+    "path": "releases/2026-09-23.1/advisoret-overture-pilot-1/comunitat_valenciana/search-index.json",
+    "format": "json",
+    "byte_size": 873,
+    "sha256": "99febc76193209981a3ff54c2a353322e6cc215ddea43ede31ad7c63a46ac951"
+  }
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "0a000000-0000-4000-8000-000000000001",
+    "name": "Café de l'Àvia",
+    "city": "València",
+    "address": "Carrer de la Pau, 12",
+    "lat": 39.4702,
+    "lon": -0.3768,
+    "primary": "cafe"
+  },
+  {
+    "id": "3f000000-0000-4000-8000-000000000002",
+    "name": "Esmorzars El Racó",
+    "city": "Castelló de la Plana",
+    "address": null,
+    "lat": 39.9864,
+    "lon": -0.0513,
+    "primary": "restaurant"
+  },
+  {
+    "id": "b7000000-0000-4000-8000-000000000003",
+    "name": "Pa i Oli d'Alacant",
+    "city": "Alacant",
+    "address": "Avinguda de Dénia, 45",
+    "lat": 38.3512,
+    "lon": -0.4815,
+    "primary": "bakery"
+  },
+  {
+    "id": "e2000000-0000-4000-8000-000000000004",
+    "name": "La Plaça d'Anna",
+    "city": "Xàtiva",
+    "address": "Plaça del Mercat, 3",
+    "lat": 38.9906,
+    "lon": -0.5186,
+    "primary": null
+  }
+]
