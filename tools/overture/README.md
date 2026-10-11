@@ -32,6 +32,23 @@ The source identity used by the pilot is the Overture GERS ID. It is an external
 
 ## 2. Offline pipeline
 
+The reproducible Comunitat Valenciana build is implemented by
+`tools/overture/build_cv_artifacts.py`. It requires `pyarrow` and accepts the
+three local Parquet inputs explicitly:
+
+```bash
+python3 -m pip install pyarrow
+python3 tools/overture/build_cv_artifacts.py \
+  --place /tmp/advisoret-cv-place.parquet \
+  --division /tmp/advisoret-cv-division.parquet \
+  --division-area /tmp/advisoret-cv-division-area.parquet \
+  --output /tmp/advisoret-overture-build
+```
+
+The command refuses to replace an existing output unless `--overwrite` is
+passed. `--generated-at` can be supplied with an ISO-8601 UTC timestamp when
+the manifest timestamp must also be fixed for a byte-for-byte rebuild.
+
 The regional artifact is generated offline from an Overture release. The tested pipeline applies these rules:
 
 - feature type is `place`;
