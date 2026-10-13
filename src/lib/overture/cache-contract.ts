@@ -15,6 +15,30 @@ export type OvertureSearchManifest = {
   };
 };
 
+export function isOvertureSearchManifest(value: unknown): value is OvertureSearchManifest {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const manifest = value as Partial<OvertureSearchManifest>;
+  const artifact = manifest.search_artifact;
+  if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) return false;
+
+  const candidateArtifact = artifact as Partial<OvertureSearchManifest["search_artifact"]>;
+  return manifest.provider === "overture"
+    && [manifest.release, manifest.schema_version, manifest.pipeline_version, manifest.region]
+      .every((field) => typeof field === "string" && field.length > 0)
+    && typeof manifest.record_count === "number"
+    && Number.isInteger(manifest.record_count)
+    && manifest.record_count >= 0
+    && typeof candidateArtifact.path === "string"
+    && candidateArtifact.path.length > 0
+    && candidateArtifact.format === "json"
+    && typeof candidateArtifact.byte_size === "number"
+    && Number.isInteger(candidateArtifact.byte_size)
+    && candidateArtifact.byte_size > 0
+    && typeof candidateArtifact.sha256 === "string"
+    && /^[0-9a-f]{64}$/.test(candidateArtifact.sha256);
+}
+
 export type OvertureCacheMetadata = {
   release: string;
   schema_version: string;

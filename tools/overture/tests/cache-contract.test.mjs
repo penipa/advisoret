@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import {
   arrayBufferToHex,
   isOvertureCacheMetadata,
+  isOvertureSearchManifest,
   isSearchIndex,
   overtureMetadataMatchesManifest,
   versionedOvertureArtifactParts,
@@ -56,6 +57,28 @@ test('valida metadata y la ata al manifest completo', () => {
     overtureMetadataMatchesManifest({ ...metadata, region: 'otro' }, manifest),
     false,
   );
+});
+
+test('valida el contrato runtime del manifest Overture', () => {
+  const validManifest = {
+    provider: 'overture',
+    release: '2026-09-23.1',
+    schema_version: 'v2.0.0',
+    pipeline_version: 'advisoret-overture-pilot-1',
+    region: 'comunitat_valenciana',
+    record_count: 0,
+    search_artifact: {
+      path: 'releases/2026-09-23.1/advisoret-overture-pilot-1/comunitat_valenciana/search-index.json',
+      format: 'json',
+      byte_size: 1,
+      sha256: 'a'.repeat(64),
+    },
+  };
+
+  assert.equal(isOvertureSearchManifest(validManifest), true);
+  assert.equal(isOvertureSearchManifest({ ...validManifest, record_count: -1 }), false);
+  assert.equal(isOvertureSearchManifest({ ...validManifest, search_artifact: { ...validManifest.search_artifact, sha256: 'A'.repeat(64) } }), false);
+  assert.equal(isOvertureSearchManifest({ ...validManifest, search_artifact: null }), false);
 });
 
 test('convierte bytes a SHA hexadecimal lowercase', () => {
