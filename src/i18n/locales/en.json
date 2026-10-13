@@ -195,7 +195,13 @@
     "awarded": "🏆 Awarded",
     "withoutAward": "No award",
     "noResults": "No results.",
-    "endResults": "End of results"
+    "endResults": "End of results",
+    "morePlaces": "More places",
+    "morePlacesHint": "Opening it will add it to Advisoret.",
+    "addingPlace": "Adding place…",
+    "materializeError": "Could not add this place. Please try again.",
+    "loginRequiredTitle": "Sign in",
+    "loginRequired": "You need to sign in to add this place."
   },
   "home": {
     "brandTitle": "Advisoret",

@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   Image,
+  Alert,
   Keyboard,
   FlatList,
   ActivityIndicator,
@@ -17,6 +18,14 @@ import { theme } from "../theme";
 import { TText } from "../ui/TText";
 import { TCard } from "../ui/TCard";
 import { useTranslation } from "react-i18next";
+import { OVERTURE_PLACES_ENABLED, OVERTURE_RELEASE } from "../lib/overture/config";
+import { loadOvertureSearchIndex } from "../lib/overture/bootstrap";
+import {
+  normalizeOvertureSearchText,
+  searchOverturePlaces,
+  type OvertureSearchRecord,
+} from "../lib/overture/search";
+import { materializeOverturePlace } from "../lib/overture/materialize";
 
 type AwardMode = "all" | "awarded" | "not_awarded";
 
@@ -167,11 +176,16 @@ export default function ExploreScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [overtureResults, setOvertureResults] = useState<OvertureSearchRecord[]>([]);
+  const [overtureLoading, setOvertureLoading] = useState<boolean>(false);
+  const [materializingOvertureId, setMaterializingOvertureId] = useState<string | null>(null);
 
   const [coverBust, setCoverBust] = useState<number>(() => Date.now());
 
   const offsetRef = useRef<number>(0);
   const lastQueryKeyRef = useRef<string>("");
+  const overtureIndexRef = useRef<OvertureSearchRecord[] | null>(null);
+  const overtureLoadPromiseRef = useRef<Promise<OvertureSearchRecord[] | null> | null>(null);
 
   const queryKey = useMemo(() => {
     return JSON.stringify({
@@ -312,7 +326,7 @@ export default function ExploreScreen() {
         setLoadingMore(false);
       }
     },
-    [awardMode, buildRequest, queryKey]
+    [awardMode, buildRequest, q, queryKey, selectedCity]
   );
 
   useEffect(() => {
@@ -323,6 +337,52 @@ export default function ExploreScreen() {
   useEffect(() => {
     void loadCities();
   }, [loadCities]);
+
+  useEffect(() => {
+    const query = q.trim();
+    if (!OVERTURE_PLACES_ENABLED || !query) {
+      setOvertureResults([]);
+      setOvertureLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadIndex = async () => {
+      if (overtureIndexRef.current) return overtureIndexRef.current;
+      if (!overtureLoadPromiseRef.current) {
+        overtureLoadPromiseRef.current = loadOvertureSearchIndex();
+      }
+      const index = await overtureLoadPromiseRef.current;
+      if (index) overtureIndexRef.current = index;
+      return index;
+    };
+
+    setOvertureLoading(true);
+    void loadIndex()
+      .then((index) => {
+        if (cancelled) return;
+        if (!index || awardMode !== "all") {
+          setOvertureResults([]);
+          return;
+        }
+
+        const city = selectedCity ? normalizeOvertureSearchText(selectedCity) : "";
+        const cityRecords = city
+          ? index.filter((record) => normalizeOvertureSearchText(record.city).startsWith(city))
+          : index;
+        setOvertureResults(searchOverturePlaces(cityRecords, query, { limit: 10 }));
+      })
+      .catch(() => {
+        if (!cancelled) setOvertureResults([]);
+      })
+      .finally(() => {
+        if (!cancelled) setOvertureLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [awardMode, q, selectedCity]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -352,6 +412,35 @@ export default function ExploreScreen() {
     setQ("");
     Keyboard.dismiss();
   }, []);
+
+  const onOverturePress = useCallback(async (record: OvertureSearchRecord) => {
+    if (materializingOvertureId) return;
+    setMaterializingOvertureId(record.id);
+
+    try {
+      const { data, error: sessionError } = await supabase.auth.getUser();
+      if (!data.user) {
+        Alert.alert(t("explore.loginRequiredTitle"), t("explore.loginRequired"), [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("auth.signIn"), onPress: () => router.push("/auth") },
+        ]);
+        return;
+      }
+      if (sessionError) throw sessionError;
+
+      const venueId = await materializeOverturePlace(record.id, OVERTURE_RELEASE);
+      router.push({ pathname: "/venue/[id]", params: { id: venueId } });
+    } catch {
+      Alert.alert(t("common.error"), t("explore.materializeError"));
+    } finally {
+      setMaterializingOvertureId(null);
+    }
+  }, [materializingOvertureId, router, t]);
+
+  const hasOvertureResults = OVERTURE_PLACES_ENABLED
+    && q.trim().length > 0
+    && awardMode === "all"
+    && overtureResults.length > 0;
 
   const Header = (
     <View style={{ padding: theme.spacing.md, paddingBottom: 6 }}>
@@ -519,21 +608,60 @@ export default function ExploreScreen() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
         ListFooterComponent={
-          loadingMore ? (
-            <View style={{ paddingVertical: 14 }}>
-              <ActivityIndicator />
-            </View>
-          ) : !loading && rows.length === 0 ? (
-            <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 6 }}>
-              <TText muted>{t("explore.noResults")}</TText>
-            </View>
-          ) : !hasMore ? (
-            <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 10 }}>
-              <TText muted size={12}>
-                {t("explore.endResults")}
-              </TText>
-            </View>
-          ) : null
+          <>
+            {loadingMore ? (
+              <View style={{ paddingVertical: 14 }}>
+                <ActivityIndicator />
+              </View>
+            ) : null}
+
+            {OVERTURE_PLACES_ENABLED && q.trim() && awardMode === "all" && (overtureLoading || overtureResults.length > 0) ? (
+              <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 14 }}>
+                <TText size={theme.font.h3} weight="800">
+                  {t("explore.morePlaces")}
+                </TText>
+                <TText muted size={12} style={{ marginTop: 4, marginBottom: 10 }}>
+                  {t("explore.morePlacesHint")}
+                </TText>
+                {overtureLoading ? <ActivityIndicator /> : overtureResults.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    disabled={!!materializingOvertureId}
+                    onPress={() => void onOverturePress(item)}
+                    style={{ paddingBottom: theme.spacing.sm, opacity: materializingOvertureId && materializingOvertureId !== item.id ? 0.55 : 1 }}
+                  >
+                    <TCard>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <View style={{ flex: 1 }}>
+                          <TText weight="800" numberOfLines={1}>{item.name}</TText>
+                          <TText muted style={{ marginTop: 5 }} numberOfLines={2}>
+                            {formatCity(item.city)}{item.address ? ` · ${item.address}` : ""}
+                          </TText>
+                          {materializingOvertureId === item.id ? (
+                            <TText muted size={12} style={{ marginTop: 6 }}>
+                              {t("explore.addingPlace")}
+                            </TText>
+                          ) : null}
+                        </View>
+                      </View>
+                    </TCard>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+
+            {!loading && rows.length === 0 && !hasOvertureResults && !overtureLoading ? (
+              <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 6 }}>
+                <TText muted>{t("explore.noResults")}</TText>
+              </View>
+            ) : null}
+
+            {!loading && rows.length > 0 && !loadingMore && !hasMore ? (
+              <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: 10 }}>
+                <TText muted size={12}>{t("explore.endResults")}</TText>
+              </View>
+            ) : null}
+          </>
         }
         renderItem={({ item }) => (
           <Pressable

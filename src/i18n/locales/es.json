@@ -195,7 +195,13 @@
     "awarded": "🏆 Premiados",
     "withoutAward": "Sin premio",
     "noResults": "Sin resultados.",
-    "endResults": "Fin de resultados"
+    "endResults": "Fin de resultados",
+    "morePlaces": "Más locales",
+    "morePlacesHint": "Al abrirlo se añadirá a Advisoret.",
+    "addingPlace": "Añadiendo local…",
+    "materializeError": "No se pudo añadir este local. Inténtalo de nuevo.",
+    "loginRequiredTitle": "Inicia sesión",
+    "loginRequired": "Necesitas iniciar sesión para añadir este local."
   },
   "home": {
     "brandTitle": "Advisoret",
