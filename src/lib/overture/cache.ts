@@ -61,6 +61,7 @@ export async function ensureOvertureSearchArtifact(
     }
 
     await temporaryFile.move(finalFile);
+    temporaryFile = null;
     const metadata = metadataFromManifest(manifest, finalFile.uri);
     await AsyncStorage.setItem(CACHE_METADATA_KEY, JSON.stringify(metadata));
     return { metadata, local_uri: finalFile.uri };
