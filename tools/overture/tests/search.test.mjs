@@ -75,14 +75,42 @@ test("el límite por defecto es 20 resultados", () => {
   assert.equal(searchOverturePlaces(candidates, "valencia").length, 20);
 });
 
-test("prioriza la coincidencia en nombre sobre ciudad y dirección", () => {
+test("una ciudad exacta limita los resultados a esa ciudad", () => {
   const candidates = [
     { ...fixture[0], id: "00000000-0000-4000-8000-000000000101", name: "Valencia", city: "Alzira", address: "Calle Mayor" },
     { ...fixture[0], id: "00000000-0000-4000-8000-000000000102", name: "Mercat", city: "Valencia", address: "Calle Mayor" },
     { ...fixture[0], id: "00000000-0000-4000-8000-000000000103", name: "Forn", city: "Alzira", address: "Valencia" },
   ];
 
-  assert.equal(searchOverturePlaces(candidates, "valencia")[0].name, "Valencia");
+  assert.deepEqual(names(searchOverturePlaces(candidates, "valencia")), ["Mercat"]);
+});
+
+test("la ciudad exacta ordena por nombre normalizado y después por id", () => {
+  const candidates = [
+    { ...fixture[0], id: "z", name: "Zeta", city: "València" },
+    { ...fixture[0], id: "b", name: "Ànima", city: "Valencia" },
+    { ...fixture[0], id: "a", name: "Anima", city: "Valencia" },
+    { ...fixture[0], id: "x", name: "Alfa", city: "Alzira" },
+  ];
+
+  assert.deepEqual(
+    searchOverturePlaces(candidates, "Valencia").map(({ id }) => id),
+    ["a", "b", "z"],
+  );
+  assert.deepEqual(
+    searchOverturePlaces(candidates, "Valencia", { limit: 2 }).map(({ id }) => id),
+    ["a", "b"],
+  );
+});
+
+test("una query sin coincidencia exacta de ciudad mantiene el ranking actual", () => {
+  const candidates = [
+    { ...fixture[0], id: "00000000-0000-4000-8000-000000000101", name: "Valencia", city: "Alzira", address: "Calle Mayor" },
+    { ...fixture[0], id: "00000000-0000-4000-8000-000000000102", name: "Mercat", city: "Valencia", address: "Calle Mayor" },
+    { ...fixture[0], id: "00000000-0000-4000-8000-000000000103", name: "Forn", city: "Alzira", address: "Valencia" },
+  ];
+
+  assert.equal(searchOverturePlaces(candidates, "valenci")[0].name, "Valencia");
 });
 
 test("address null no rompe la búsqueda", () => {

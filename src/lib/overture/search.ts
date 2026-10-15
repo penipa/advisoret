@@ -28,6 +28,11 @@ type ScoredRecord = {
   city: string;
 };
 
+type CityMatch = {
+  record: OvertureSearchRecord;
+  name: string;
+};
+
 function countMatchingTokens(tokens: string[], value: string): number {
   return tokens.reduce((count, token) => count + (value.includes(token) ? 1 : 0), 0);
 }
@@ -48,11 +53,17 @@ export function searchOverturePlaces(
   const limit = Math.max(0, Math.floor(options.limit ?? 20));
   if (limit === 0) return [];
 
+  const cityMatches: CityMatch[] = [];
   const scored: ScoredRecord[] = [];
 
   for (const record of records) {
     const name = normalizeOvertureSearchText(record.name);
     const city = normalizeOvertureSearchText(record.city);
+    if (city === normalizedQuery) {
+      cityMatches.push({ record, name });
+      continue;
+    }
+
     const address = normalizeOvertureSearchText(record.address ?? "");
     const searchableText = `${name} ${city} ${address}`;
 
@@ -74,6 +85,15 @@ export function searchOverturePlaces(
     score += countMatchingTokens(tokens, address) * 1;
 
     scored.push({ record, score, name, city });
+  }
+
+  if (cityMatches.length > 0) {
+    cityMatches.sort((left, right) =>
+      compareNormalizedText(left.name, right.name)
+      || compareNormalizedText(left.record.id, right.record.id),
+    );
+
+    return cityMatches.slice(0, limit).map(({ record }) => record);
   }
 
   scored.sort((left, right) =>
