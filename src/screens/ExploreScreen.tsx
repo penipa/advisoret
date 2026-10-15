@@ -422,7 +422,7 @@ export default function ExploreScreen() {
       if (!data.user) {
         Alert.alert(t("explore.loginRequiredTitle"), t("explore.loginRequired"), [
           { text: t("common.cancel"), style: "cancel" },
-          { text: t("auth.signIn"), onPress: () => router.push("/auth") },
+          { text: t("account.signIn"), onPress: () => router.push("/auth") },
         ]);
         return;
       }
