@@ -359,7 +359,7 @@ export default function ExploreScreen() {
 
     setOvertureLoading(true);
     void loadIndex()
-      .then((index) => {
+      .then(async (index) => {
         if (cancelled) return;
         if (!index || awardMode !== "all") {
           setOvertureResults([]);
@@ -370,7 +370,28 @@ export default function ExploreScreen() {
         const cityRecords = city
           ? index.filter((record) => normalizeOvertureSearchText(record.city).startsWith(city))
           : index;
-        setOvertureResults(searchOverturePlaces(cityRecords, query, { limit: 10 }));
+        const candidates = searchOverturePlaces(cityRecords, query, { limit: 10 });
+        const candidateIds = candidates.map((record) => record.id);
+
+        try {
+          const { data: materializedIds, error: materializedIdsError } = await supabase.rpc(
+            "get_materialized_external_ids_v1",
+            { p_provider: "overture", p_external_ids: candidateIds }
+          );
+
+          if (cancelled) return;
+          if (materializedIdsError) {
+            setOvertureResults(candidates);
+            return;
+          }
+
+          const materializedIdSet = new Set(
+            ((materializedIds ?? []) as { external_id: string }[]).map((row) => row.external_id)
+          );
+          setOvertureResults(candidates.filter((record) => !materializedIdSet.has(record.id)));
+        } catch {
+          if (!cancelled) setOvertureResults(candidates);
+        }
       })
       .catch(() => {
         if (!cancelled) setOvertureResults([]);
@@ -429,6 +450,7 @@ export default function ExploreScreen() {
       if (sessionError) throw sessionError;
 
       const venueId = await materializeOverturePlace(record.id, OVERTURE_RELEASE);
+      setOvertureResults((prev) => prev.filter((item) => item.id !== record.id));
       router.push({ pathname: "/venue/[id]", params: { id: venueId } });
     } catch {
       Alert.alert(t("common.error"), t("explore.materializeError"));
