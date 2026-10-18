@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
+import { HeaderBackButton } from "@react-navigation/elements";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
@@ -128,7 +129,20 @@ export default function RootLayout() {
         <Stack.Screen name="auth" options={{ headerShown: false }} />
 
         {/* Limpia títulos técnicos de pantallas dinámicas */}
-        <Stack.Screen name="venue/[id]" options={{ title: "", headerBackTitle: i18n.t("common.back") }} />
+        <Stack.Screen
+          name="venue/[id]"
+          options={{
+            title: "",
+            headerBackVisible: false,
+            headerLeft: () => (
+              <HeaderBackButton
+                onPress={() => router.back()}
+                label={i18n.t("common.back")}
+                tintColor={BRAND.gold}
+              />
+            ),
+          }}
+        />
         <Stack.Screen name="rate/[id]" options={{ title: "", headerBackTitle: i18n.t("common.back") }} />
         <Stack.Screen name="rankings/[scope]" options={{ title: "", headerBackTitle: i18n.t("common.back") }} />
 
