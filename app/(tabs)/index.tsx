@@ -23,6 +23,9 @@ import { TCard, TSkeletonBox, TSkeletonLine } from "../../src/ui/TCard";
 import { TButton } from "../../src/ui/TButton";
 import { RatingRing } from "../../src/ui/RatingRing";
 import i18n from "../../src/i18n";
+import { OVERTURE_PLACES_ENABLED, OVERTURE_RELEASE } from "../../src/lib/overture/config";
+import { loadOvertureSearchIndex } from "../../src/lib/overture/bootstrap";
+import { materializeOverturePlace } from "../../src/lib/overture/materialize";
 // </SECTION:IMPORTS>
 
 // <SECTION:ASSETS>
@@ -80,19 +83,30 @@ type NewVenue = {
 };
 
 
-type NearVenue = {
-  id: string;
+type NearVenueBase = {
+  kind: "internal" | "overture";
   name: string;
   city: string;
   address_text: string | null;
   cover_photo_path: string | null;
   lat: number | null;
   lon: number | null;
-  // calculados localmente
   distance_km: number;
   avg_score?: number | null;
   ratings_count?: number | null;
 };
+
+type NearInternalVenue = NearVenueBase & {
+  kind: "internal";
+  id: string;
+};
+
+type NearOvertureVenue = NearVenueBase & {
+  kind: "overture";
+  externalId: string;
+};
+
+type NearVenue = NearInternalVenue | NearOvertureVenue;
 
 type ChipKey = "all" | "city" | "following" | "mine";
 type AwardFilter = "all" | "awarded" | "no_award";
@@ -641,6 +655,7 @@ const [nearRows, setNearRows] = useState<NearVenue[]>([]);
 const [nearLoading, setNearLoading] = useState(false);
 const [locDenied, setLocDenied] = useState(false);
 const [nearRequested, setNearRequested] = useState(false);
+const [materializingNearOvertureId, setMaterializingNearOvertureId] = useState<string | null>(null);
 // </SECTION:STATE_PREMIUM_CONTENT>
 
 
@@ -650,9 +665,43 @@ const [nearRequested, setNearRequested] = useState(false);
   // </SECTION:STATE_UI_MISC>
 
   // <SECTION:NAV_HELPERS>
-  const goVenue = (venueId: string) => {
+  const goVenue = useCallback((venueId: string) => {
     router.push({ pathname: "/venue/[id]", params: { id: venueId } });
-  };
+  }, [router]);
+
+  const onNearVenuePress = useCallback(async (venue: NearVenue) => {
+    if (venue.kind === "internal") {
+      goVenue(venue.id);
+      return;
+    }
+
+    if (materializingNearOvertureId) return;
+    setMaterializingNearOvertureId(venue.externalId);
+
+    try {
+      const { data, error: sessionError } = await supabase.auth.getUser();
+      if (!data.user) {
+        Alert.alert(t("explore.loginRequiredTitle"), t("explore.loginRequired"), [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("account.signIn"), onPress: () => router.push("/auth") },
+        ]);
+        return;
+      }
+      if (sessionError) throw sessionError;
+
+      const venueId = await materializeOverturePlace(venue.externalId, OVERTURE_RELEASE);
+      setNearRows((previous) => previous.map((item) => (
+        item.kind === "overture" && item.externalId === venue.externalId
+          ? { ...item, kind: "internal", id: venueId }
+          : item
+      )) as NearVenue[]);
+      goVenue(venueId);
+    } catch {
+      Alert.alert(t("common.error"), t("explore.materializeError"));
+    } finally {
+      setMaterializingNearOvertureId(null);
+    }
+  }, [goVenue, materializingNearOvertureId, router, t]);
 
   // Navegar a la pestaña "Explorar" (listado infinito) con filtros actuales
   const goExplore = useCallback(() => {
@@ -919,10 +968,12 @@ const loadNew = async () => {
         lon: number | null;
       }>;
 
-      const withDist: NearVenue[] = base
+      const internalWithDist: NearInternalVenue[] = base
         .filter((v) => typeof v.lat === "number" && typeof v.lon === "number")
         .map((v) => ({
           ...v,
+          kind: "internal" as const,
+          id: v.id,
           distance_km: haversineKm(myLat, myLon, Number(v.lat), Number(v.lon)),
           avg_score: 0,
           ratings_count: 0,
@@ -930,34 +981,76 @@ const loadNew = async () => {
         .sort((a, b) => a.distance_km - b.distance_km)
         .slice(0, 10);
 
-      if (withDist.length === 0) {
-        setNearRows([]);
-        return;
-      }
-
       // Enriquecer rating (all-time)
-      const ids = withDist.map((x) => x.id);
-      const rr = await supabase
-        .from("vw_venue_stats_all_time_current")
-        .select("venue_id,avg_score,ratings_count")
-        .in("venue_id", ids);
-
       const rankMap = new Map<string, { avg_score: number; ratings_count: number }>();
-      if (!rr.error) {
-        for (const row of (rr.data ?? []) as any[]) {
-          rankMap.set(row.venue_id, {
-            avg_score: Number(row.avg_score ?? 0),
-            ratings_count: Number(row.ratings_count ?? 0),
-          });
+      if (internalWithDist.length > 0) {
+        const ids = internalWithDist.map((x) => x.id);
+        const rr = await supabase
+          .from("vw_venue_stats_all_time_current")
+          .select("venue_id,avg_score,ratings_count")
+          .in("venue_id", ids);
+
+        if (!rr.error) {
+          for (const row of (rr.data ?? []) as any[]) {
+            rankMap.set(row.venue_id, {
+              avg_score: Number(row.avg_score ?? 0),
+              ratings_count: Number(row.ratings_count ?? 0),
+            });
+          }
         }
       }
 
-      const enriched = withDist.map((v) => {
+      const internalRows = internalWithDist.map((v) => {
         const r = rankMap.get(v.id);
         return { ...v, avg_score: r?.avg_score ?? 0, ratings_count: r?.ratings_count ?? 0 };
       });
 
-      setNearRows(enriched);
+      let overtureRows: NearOvertureVenue[] = [];
+      if (OVERTURE_PLACES_ENABLED) {
+        try {
+          const overtureIndex = await loadOvertureSearchIndex();
+          const nearbyOvertureRecords = (overtureIndex ?? [])
+            .map((record) => ({
+              record,
+              distance_km: haversineKm(myLat, myLon, record.lat, record.lon),
+            }))
+            .sort((a, b) => a.distance_km - b.distance_km)
+            .slice(0, 100);
+
+          if (nearbyOvertureRecords.length > 0) {
+            const candidateIds = nearbyOvertureRecords.map(({ record }) => record.id);
+            const { data: materializedIds, error: materializedIdsError } = await supabase.rpc(
+              "get_materialized_external_ids_v1",
+              { p_provider: "overture", p_external_ids: candidateIds },
+            );
+
+            if (!materializedIdsError) {
+              const materializedIdSet = new Set(
+                ((materializedIds ?? []) as { external_id: string }[]).map((row) => row.external_id),
+              );
+              overtureRows = nearbyOvertureRecords
+                .filter(({ record }) => !materializedIdSet.has(record.id))
+                .map(({ record, distance_km }) => ({
+                  kind: "overture" as const,
+                  externalId: record.id,
+                  name: record.name,
+                  city: record.city,
+                  address_text: record.address,
+                  cover_photo_path: null,
+                  lat: record.lat,
+                  lon: record.lon,
+                  distance_km,
+                  avg_score: null,
+                  ratings_count: null,
+                }));
+            }
+          }
+        } catch {
+          // Fail closed for Overture; internal venues remain available.
+        }
+      }
+
+      setNearRows([...internalRows, ...overtureRows].sort((a, b) => a.distance_km - b.distance_km).slice(0, 10));
     } catch (e: any) {
       setNearRows([]);
       // No hacemos Alert siempre (molesta), pero en dev sí ayuda
@@ -1288,7 +1381,12 @@ return (
             ) : nearRows.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.sm }}>
                 {nearRows.map((v) => (
-                  <NearVenueCard key={v.id} v={v} cacheBust={coverBust} onPress={() => goVenue(v.id)} />
+                  <NearVenueCard
+                    key={v.kind === "internal" ? v.id : v.externalId}
+                    v={v}
+                    cacheBust={coverBust}
+                    onPress={() => void onNearVenuePress(v)}
+                  />
                 ))}
               </ScrollView>
             ) : (
