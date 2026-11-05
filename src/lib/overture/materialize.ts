@@ -2,6 +2,15 @@ import { supabase } from "../supabase";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
+export class OvertureMatchAmbiguousError extends Error {
+  readonly code = "venue_match_ambiguous";
+
+  constructor() {
+    super("A possible existing venue requires review before materialization.");
+    this.name = "OvertureMatchAmbiguousError";
+  }
+}
+
 export async function materializeOverturePlace(
   externalId: string,
   release: string,
@@ -24,7 +33,14 @@ export async function materializeOverturePlace(
     },
   });
 
-  if (error) throw new Error(error.message || "Could not materialize Overture place.");
+  if (error) {
+    const response = error.context;
+    if (response?.status === 409 && typeof response.clone === "function") {
+      const body = await response.clone().json().catch(() => null);
+      if (body?.code === "venue_match_ambiguous") throw new OvertureMatchAmbiguousError();
+    }
+    throw new Error(error.message || "Could not materialize Overture place.");
+  }
 
   const venueId = data && typeof data === "object" && !Array.isArray(data)
     ? (data as { venue_id?: unknown }).venue_id

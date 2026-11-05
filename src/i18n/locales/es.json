@@ -199,6 +199,7 @@
     "morePlaces": "Cargar más resultados",
     "morePlacesHint": "Al abrirlo se añadirá a Advisoret.",
     "addingPlace": "Añadiendo local…",
+    "materializeAmbiguous": "Este local podría existir ya en Advisoret. No se ha creado ninguna ficha nueva. Busca el local existente en Explorar.",
     "materializeError": "No se pudo añadir este local. Inténtalo de nuevo.",
     "loginRequiredTitle": "Inicia sesión",
     "loginRequired": "Necesitas iniciar sesión para añadir este local."

@@ -199,6 +199,7 @@
     "morePlaces": "Load more results",
     "morePlacesHint": "Opening it will add it to Advisoret.",
     "addingPlace": "Adding place…",
+    "materializeAmbiguous": "This place may already exist in Advisoret. No new listing was created. Search for the existing place in Explore.",
     "materializeError": "Could not add this place. Please try again.",
     "loginRequiredTitle": "Sign in",
     "loginRequired": "You need to sign in to add this place."

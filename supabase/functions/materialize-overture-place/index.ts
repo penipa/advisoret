@@ -321,6 +321,13 @@ Deno.serve(async (req) => {
     p_lon: record.lon,
   });
 
+  if (rpcError?.code === "PAV01") {
+    return json(409, {
+      code: "venue_match_ambiguous",
+      error: "A possible existing venue requires review before materialization.",
+    }, req);
+  }
+
   if (rpcError || typeof venueId !== "string" || !UUID_RE.test(venueId)) {
     fail("materialization_rpc", rpcError ?? new Error("RPC returned an invalid venue id"), externalId);
     return json(500, { error: "Venue materialization unavailable" }, req);

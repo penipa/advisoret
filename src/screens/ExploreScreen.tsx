@@ -25,7 +25,8 @@ import {
   searchOverturePlaces,
   type OvertureSearchRecord,
 } from "../lib/overture/search";
-import { materializeOverturePlace } from "../lib/overture/materialize";
+import { materializeOverturePlace, OvertureMatchAmbiguousError } from "../lib/overture/materialize";
+import { deduplicateOverturePlaces, loadInternalDeduplicationCandidates } from "../lib/overture/deduplicate";
 
 type AwardMode = "all" | "awarded" | "not_awarded";
 
@@ -370,28 +371,32 @@ export default function ExploreScreen() {
         const cityRecords = city
           ? index.filter((record) => normalizeOvertureSearchText(record.city).startsWith(city))
           : index;
-        const candidates = searchOverturePlaces(cityRecords, query, { limit: 10 });
+        const candidates = searchOverturePlaces(cityRecords, query, { limit: 100 });
         const candidateIds = candidates.map((record) => record.id);
 
-        try {
-          const { data: materializedIds, error: materializedIdsError } = await supabase.rpc(
-            "get_materialized_external_ids_v1",
-            { p_provider: "overture", p_external_ids: candidateIds }
-          );
-
-          if (cancelled) return;
-          if (materializedIdsError) {
-            setOvertureResults(candidates);
-            return;
-          }
-
-          const materializedIdSet = new Set(
-            ((materializedIds ?? []) as { external_id: string }[]).map((row) => row.external_id)
-          );
-          setOvertureResults(candidates.filter((record) => !materializedIdSet.has(record.id)));
-        } catch {
-          if (!cancelled) setOvertureResults(candidates);
+        // Compare with all nearby internal candidates, including venues outside
+        // the current text search/page, before choosing the 10 virtual results.
+        const [materialized, internal] = await Promise.all([
+          supabase.rpc("get_materialized_external_ids_v1", {
+            p_provider: "overture", p_external_ids: candidateIds,
+          }),
+          loadInternalDeduplicationCandidates(candidates, (bounds, from, to) => supabase
+            .from("vw_venues_with_coords")
+            .select("id,name,city,address_text,lat,lon")
+            .gte("lat", bounds.minLat).lte("lat", bounds.maxLat)
+            .gte("lon", bounds.minLon).lte("lon", bounds.maxLon)
+            .order("id", { ascending: true })
+            .range(from, to)),
+        ]);
+        if (cancelled) return;
+        if (materialized.error) {
+          setOvertureResults([]);
+          return;
         }
+        const materializedIdSet = new Set(
+          ((materialized.data ?? []) as { external_id: string }[]).map((row) => row.external_id),
+        );
+        setOvertureResults(deduplicateOverturePlaces(candidates, internal, materializedIdSet).slice(0, 10));
       })
       .catch(() => {
         if (!cancelled) setOvertureResults([]);
@@ -452,8 +457,9 @@ export default function ExploreScreen() {
       const venueId = await materializeOverturePlace(record.id, OVERTURE_RELEASE);
       setOvertureResults((prev) => prev.filter((item) => item.id !== record.id));
       router.push({ pathname: "/venue/[id]", params: { id: venueId } });
-    } catch {
-      Alert.alert(t("common.error"), t("explore.materializeError"));
+    } catch (error) {
+      Alert.alert(t("common.error"), t(error instanceof OvertureMatchAmbiguousError
+        ? "explore.materializeAmbiguous" : "explore.materializeError"));
     } finally {
       setMaterializingOvertureId(null);
     }

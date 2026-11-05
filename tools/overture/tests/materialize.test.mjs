@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { FunctionsClient } from '@supabase/functions-js';
-import { materializeOverturePlace } from '../../../src/lib/overture/materialize.ts';
+import { loadMaterializeClient } from './materialize-harness.mjs';
+
+let invoke = async () => { throw new Error('Unexpected invocation'); };
+const { materializeOverturePlace, OvertureMatchAmbiguousError } = await loadMaterializeClient((...args) => invoke(...args));
 
 const externalId = '0A1B2C3D-4E5F-6789-ABCD-EF0123456789';
 const venueId = '123e4567-e89b-12d3-a456-426614174000';
 
 function mockInvoke(implementation) {
-  const originalInvoke = FunctionsClient.prototype.invoke;
-  FunctionsClient.prototype.invoke = implementation;
+  const originalInvoke = invoke;
+  invoke = implementation;
   return () => {
-    FunctionsClient.prototype.invoke = originalInvoke;
+    invoke = originalInvoke;
   };
 }
 
@@ -27,7 +29,7 @@ test('envía el payload correcto y normaliza external_id', async () => {
       await materializeOverturePlace(`  ${externalId}  `, '  2026/09/23.1  '),
       venueId,
     );
-    assert.deepEqual(received, {
+    assert.deepEqual(structuredClone(received), {
       functionName: 'materialize-overture-place',
       options: {
         body: {
@@ -85,12 +87,35 @@ test('propaga el error de invoke como Error', async () => {
 
   try {
     await assert.rejects(materializeOverturePlace(externalId, '2026/09/23.1'), (error) => {
-      assert.ok(error instanceof Error);
       assert.equal(error.message, 'unauthorized');
       return true;
     });
   } finally {
     restore();
+  }
+});
+
+test('409 ambiguo produce un error tipado sin devolver un UUID', async () => {
+  const context = new Response(JSON.stringify({ code: 'venue_match_ambiguous' }), { status: 409 });
+  const restore = mockInvoke(async () => ({ data: null, error: { context } }));
+  try {
+    await assert.rejects(materializeOverturePlace(externalId, 'release'), (error) =>
+      error instanceof OvertureMatchAmbiguousError && error.code === 'venue_match_ambiguous');
+    assert.equal(context.bodyUsed, false);
+  } finally { restore(); }
+});
+
+test('otros conflictos, respuestas inválidas y fallos de red siguen siendo errores genéricos', async () => {
+  for (const error of [
+    { context: new Response('{"code":"other"}', { status: 409 }) },
+    { context: new Response('invalid JSON', { status: 409 }) },
+    { context: new Response('{"code":"venue_match_ambiguous"}', { status: 500 }) },
+    { message: 'network failed' },
+  ]) {
+    const restore = mockInvoke(async () => ({ data: null, error }));
+    try {
+      await assert.rejects(materializeOverturePlace(externalId, 'release'), (caught) => !(caught instanceof OvertureMatchAmbiguousError));
+    } finally { restore(); }
   }
 });
 

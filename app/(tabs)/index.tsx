@@ -25,7 +25,10 @@ import { RatingRing } from "../../src/ui/RatingRing";
 import i18n from "../../src/i18n";
 import { OVERTURE_PLACES_ENABLED, OVERTURE_RELEASE } from "../../src/lib/overture/config";
 import { loadOvertureSearchIndex } from "../../src/lib/overture/bootstrap";
-import { materializeOverturePlace } from "../../src/lib/overture/materialize";
+import { materializeOverturePlace, OvertureMatchAmbiguousError } from "../../src/lib/overture/materialize";
+import { loadNearbyVenues } from "../../src/lib/nearby";
+import type { NearVenue } from "../../src/lib/nearby";
+import type { OvertureSearchRecord } from "../../src/lib/overture/search";
 // </SECTION:IMPORTS>
 
 // <SECTION:ASSETS>
@@ -82,31 +85,6 @@ type NewVenue = {
   label?: string | null;
 };
 
-
-type NearVenueBase = {
-  kind: "internal" | "overture";
-  name: string;
-  city: string;
-  address_text: string | null;
-  cover_photo_path: string | null;
-  lat: number | null;
-  lon: number | null;
-  distance_km: number;
-  avg_score?: number | null;
-  ratings_count?: number | null;
-};
-
-type NearInternalVenue = NearVenueBase & {
-  kind: "internal";
-  id: string;
-};
-
-type NearOvertureVenue = NearVenueBase & {
-  kind: "overture";
-  externalId: string;
-};
-
-type NearVenue = NearInternalVenue | NearOvertureVenue;
 
 type ChipKey = "all" | "city" | "following" | "mine";
 type AwardFilter = "all" | "awarded" | "no_award";
@@ -586,28 +564,6 @@ function NearVenueCard({
   );
 }
 // </SECTION:UI_COMPONENTS>
-
-
-
-// <SECTION:HELPERS_GEO>
-// Haversine (distancia en km)
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-// </SECTION:HELPERS_GEO>
-
 // <SECTION:SCREEN>
 export default function HomeScreen() {
 // <SECTION:SCREEN_INIT>
@@ -696,8 +652,9 @@ const [materializingNearOvertureId, setMaterializingNearOvertureId] = useState<s
           : item
       )) as NearVenue[]);
       goVenue(venueId);
-    } catch {
-      Alert.alert(t("common.error"), t("explore.materializeError"));
+    } catch (error) {
+      Alert.alert(t("common.error"), t(error instanceof OvertureMatchAmbiguousError
+        ? "explore.materializeAmbiguous" : "explore.materializeError"));
     } finally {
       setMaterializingNearOvertureId(null);
     }
@@ -950,107 +907,15 @@ const loadNew = async () => {
       const myLat = pos.coords.latitude;
       const myLon = pos.coords.longitude;
 
-      // Traemos un pool razonable y ordenamos local (plan free friendly)
-      const res = await supabase
-        .from("vw_venues_with_coords")
-        .select("id,name,city,address_text,cover_photo_path,lat,lon,created_at")
-        .limit(200);
-
-      if (res.error) throw new Error(res.error.message);
-
-      const base = (res.data ?? []) as Array<{
-        id: string;
-        name: string;
-        city: string;
-        address_text: string | null;
-        cover_photo_path: string | null;
-        lat: number | null;
-        lon: number | null;
-      }>;
-
-      const internalWithDist: NearInternalVenue[] = base
-        .filter((v) => typeof v.lat === "number" && typeof v.lon === "number")
-        .map((v) => ({
-          ...v,
-          kind: "internal" as const,
-          id: v.id,
-          distance_km: haversineKm(myLat, myLon, Number(v.lat), Number(v.lon)),
-          avg_score: 0,
-          ratings_count: 0,
-        }))
-        .sort((a, b) => a.distance_km - b.distance_km)
-        .slice(0, 10);
-
-      // Enriquecer rating (all-time)
-      const rankMap = new Map<string, { avg_score: number; ratings_count: number }>();
-      if (internalWithDist.length > 0) {
-        const ids = internalWithDist.map((x) => x.id);
-        const rr = await supabase
-          .from("vw_venue_stats_all_time_current")
-          .select("venue_id,avg_score,ratings_count")
-          .in("venue_id", ids);
-
-        if (!rr.error) {
-          for (const row of (rr.data ?? []) as any[]) {
-            rankMap.set(row.venue_id, {
-              avg_score: Number(row.avg_score ?? 0),
-              ratings_count: Number(row.ratings_count ?? 0),
-            });
-          }
-        }
-      }
-
-      const internalRows = internalWithDist.map((v) => {
-        const r = rankMap.get(v.id);
-        return { ...v, avg_score: r?.avg_score ?? 0, ratings_count: r?.ratings_count ?? 0 };
-      });
-
-      let overtureRows: NearOvertureVenue[] = [];
+      let overtureIndex: OvertureSearchRecord[] = [];
       if (OVERTURE_PLACES_ENABLED) {
         try {
-          const overtureIndex = await loadOvertureSearchIndex();
-          const nearbyOvertureRecords = (overtureIndex ?? [])
-            .map((record) => ({
-              record,
-              distance_km: haversineKm(myLat, myLon, record.lat, record.lon),
-            }))
-            .sort((a, b) => a.distance_km - b.distance_km)
-            .slice(0, 100);
-
-          if (nearbyOvertureRecords.length > 0) {
-            const candidateIds = nearbyOvertureRecords.map(({ record }) => record.id);
-            const { data: materializedIds, error: materializedIdsError } = await supabase.rpc(
-              "get_materialized_external_ids_v1",
-              { p_provider: "overture", p_external_ids: candidateIds },
-            );
-
-            if (!materializedIdsError) {
-              const materializedIdSet = new Set(
-                ((materializedIds ?? []) as { external_id: string }[]).map((row) => row.external_id),
-              );
-              overtureRows = nearbyOvertureRecords
-                .filter(({ record }) => !materializedIdSet.has(record.id))
-                .map(({ record, distance_km }) => ({
-                  kind: "overture" as const,
-                  externalId: record.id,
-                  name: record.name,
-                  city: record.city,
-                  address_text: record.address,
-                  cover_photo_path: null,
-                  lat: record.lat,
-                  lon: record.lon,
-                  distance_km,
-                  avg_score: null,
-                  ratings_count: null,
-                }));
-            }
-          }
+          overtureIndex = (await loadOvertureSearchIndex()) ?? [];
         } catch {
-          // Fail closed for Overture; internal venues remain available.
+          // Canonical venues remain available if the optional index fails.
         }
       }
-
-      setNearRows([...internalRows, ...overtureRows].sort((a, b) => a.distance_km - b.distance_km).slice(0, 10));
+      setNearRows(await loadNearbyVenues(supabase, myLat, myLon, overtureIndex));
     } catch (e: any) {
       setNearRows([]);
       // No hacemos Alert siempre (molesta), pero en dev sí ayuda
